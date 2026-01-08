@@ -1,6 +1,5 @@
-import os
-from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+from fastapi import HTTPException
 
 class Settings(BaseSettings):
     APP_NAME: str = "SalesPrediction"
@@ -8,8 +7,12 @@ class Settings(BaseSettings):
 
     BACKEND_API_KEY: str
 
-    class Config():
+    class Config:
         env_file: str = ".env"
         case_sensitive: bool = True
 
 settings = Settings()
+
+def verify_key(key):
+    if key != settings.BACKEND_API_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden: invalid backend key")
