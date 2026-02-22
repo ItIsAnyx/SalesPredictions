@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
 
     private final UserService userService;
-    private final EmailVerificationService emailVerificationService;
 
     private static final String LOGIN_VIEW = "login";
     public static final String REGISTER_VIEW = "register";

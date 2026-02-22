@@ -1,0 +1,56 @@
+package ru.morzevichka.api_gateway.config;
+
+import ru.morzevichka.api_gateway.dto.ErrorDto;
+import ru.morzevichka.api_gateway.filter.AddAuthorizationHeaderFilter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
+import org.springframework.web.servlet.function.ServerResponse;
+
+import java.util.List;
+
+import static org.springframework.cloud.gateway.server.mvc.filter.LoadBalancerFilterFunctions.lb;
+import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
+import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
+import static org.springframework.cloud.gateway.server.mvc.predicate.GatewayRequestPredicates.path;
+
+@Slf4j
+@Configuration
+@RequiredArgsConstructor
+@EnableConfigurationProperties(ClientProperties.class)
+public class GatewayRouteConfig {
+
+    private final AddAuthorizationHeaderFilter addAuthorizationHeaderFilter;
+
+    @Bean
+    RouterFunction<ServerResponse> routerFunction() {
+        return route("api")
+                        .onError(Exception.class, this::handleException)
+                        .route(path("/api/**"), http())
+                        .filter(lb("api-service"))
+                        .filter(addAuthorizationHeaderFilter)
+                        .build()
+                .and(route("verify-email-password-reset")
+                        .onError(Exception.class, this::handleException)
+                        .route(path("/verify-email", "/account-recovery/**"), http())
+                        .filter(lb("auth-service"))
+                        .build())
+                ;
+    }
+
+    private ServerResponse handleException(Throwable throwable, ServerRequest request) {
+        log.error("#handleException - failed to run request {}", request.uri(), throwable);
+        ErrorDto errorDto = ErrorDto.builder()
+                .errorDetails(List.of(request.uri().toString(), throwable.getMessage()))
+                .build();
+        return ServerResponse
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(errorDto);
+    }
+}
+
