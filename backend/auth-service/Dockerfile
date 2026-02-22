@@ -34,6 +34,6 @@ WORKDIR /app
 
 USER 1000
 
-EXPOSE 8761
+EXPOSE 8081
 
 ENTRYPOINT ["/jre/bin/java", "-jar", "app.jar"]
