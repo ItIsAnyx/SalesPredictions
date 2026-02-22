@@ -6,3 +6,4 @@ backend/api/database/__pycache__/
 backend/api/my_magazine/__pycache__/
 
 .idea/
+.env
