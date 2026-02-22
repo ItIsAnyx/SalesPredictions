@@ -1,7 +1,5 @@
 package ru.morzevichka.auth_service.exception;
 
-import ru.morzevichka.auth_service.exception.email.InvalidEmailVerificationTokenException;
-import ru.morzevichka.auth_service.exception.account_recovery.InvalidAccountRecoveryTokenException;
 import ru.morzevichka.auth_service.exception.password.PasswordMismatchException;
 import ru.morzevichka.auth_service.exception.user.UserException;
 import org.springframework.ui.Model;
@@ -20,19 +18,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PasswordMismatchException.class)
     public String passwordMismatchExceptionHandler(PasswordMismatchException ex, Model model) {
         model.addAttribute("error", ex.getMessage());
-        return "password-reset";
-    }
-
-    @ExceptionHandler(InvalidEmailVerificationTokenException.class)
-    public String invalidEmailVerificationTokenExceptionHandler(InvalidEmailVerificationTokenException ex, Model model) {
-        model.addAttribute("error", ex.getMessage());
-        return "verify-email";
-    }
-
-    @ExceptionHandler(InvalidAccountRecoveryTokenException.class)
-    public String invalidAccountRecoveryTokenExceptionHandler(InvalidAccountRecoveryTokenException ex, Model model) {
-        model.addAttribute("error", ex.getMessage());
-        model.addAttribute("token", null);
         return "password-reset";
     }
 }
