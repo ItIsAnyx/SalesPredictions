@@ -1,3 +1,30 @@
 spring:
   application:
     name: auth-service
+
+  datasource:
+    url: ${DB_URL}/${DB_AUTH_DATABASE}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_AUTH_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: 8081
+  servlet:
+    session:
+      cookie:
+        name: AUTHSESSION
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+oauth2:
+  client_id: ${CLIENT_ID}
+  client_secret: ${CLIENT_SECRET}
+  client_registration_id: "auth-server"

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign in</title>
+</head>
+<body>
+
+<h2>Login</h2>
+
+<div th:if="${error}" class="error">
+    <p th:text="${error}"></p>
+    <div th:if="${errorType == 'EMAIL_NOT_VERIFIED'}">
+        <a href="/verify-email">Send verification email again</a>
+    </div>
+</div>
+
+<div th:if="${success}" class="success">
+    <p th:text="${success}"></p>
+</div>
+
+<div th:if="${param.error}">
+    Invalid credentials
+</div>
+
+<form method="post" action="/login">
+    <div>
+        Email
+    </div>
+    <div>
+        <input type="text" name="username" placeholder="Email" required>
+    </div>
+    <div>
+        Password
+        <a href="/account-recovery">Forgot password?</a>
+    </div>
+    <div>
+        <input type="password" name="password" placeholder="Password" required>
+    </div>
+
+    <button type="submit">Sign in</button>
+
+</form>
+<div>
+    Don't have an account?
+    <a href="/register">Sign up</a>
+</div>
+
+</body>
+</html>
