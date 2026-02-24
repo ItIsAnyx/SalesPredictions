@@ -4,8 +4,8 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
 server:
@@ -19,12 +19,12 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL}/eureka
 
 oauth2:
   client_id: ${CLIENT_ID}
   client_secret: ${CLIENT_SECRET}
-  issuer_uri: ${AUTH_ISSUER_URI:http://localhost:8081}
+  issuer_uri: ${AUTH_ISSUER_URL}
   client-registration-id: "auth-server"
 
 logging:
