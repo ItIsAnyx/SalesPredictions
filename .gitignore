@@ -7,3 +7,4 @@ backend/api/my_magazine/__pycache__/
 
 .idea/
 .env
+.secrets
