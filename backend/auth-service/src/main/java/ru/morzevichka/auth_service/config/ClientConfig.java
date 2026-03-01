@@ -1,0 +1,55 @@
+package ru.morzevichka.auth_service.config;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+
+import java.time.Duration;
+
+@Configuration
+@EnableConfigurationProperties(ClientProperties.class)
+@RequiredArgsConstructor
+public class ClientConfig {
+
+    private final ClientProperties properties;
+
+    @Bean
+    RegisteredClientRepository registeredClientRepository() {
+        RegisteredClient confidentClient = RegisteredClient.withId(properties.getClientRegistrationId())
+                .clientId(properties.getClientId())
+                .clientSecret("{noop}" + properties.getClientSecret())
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantTypes(types -> {
+                    types.add(AuthorizationGrantType.AUTHORIZATION_CODE);
+                    types.add(AuthorizationGrantType.REFRESH_TOKEN);
+                })
+                .redirectUri("http://localhost:8080/login/oauth2/code/" + properties.getClientRegistrationId())
+                .postLogoutRedirectUri("http://localhost:8080/")
+                .scopes(scope -> {
+                    scope.add("openid");
+                    scope.add("profile");
+                })
+                .clientSettings(ClientSettings.builder()
+                        .requireAuthorizationConsent(false)
+                        .requireProofKey(false)
+                        .build()
+                )
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofMinutes(5))
+                        .refreshTokenTimeToLive(Duration.ofMinutes(60))
+                        .reuseRefreshTokens(false)
+                        .build()
+                )
+                .build();
+
+        return new InMemoryRegisteredClientRepository(confidentClient);
+    }
+}
