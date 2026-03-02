@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-    path:
+    paths:
       - 'backend/discovery-service/**'
   pull_request:
     types: [opened, synchronize, reopened]
