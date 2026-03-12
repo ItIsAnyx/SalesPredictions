@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.0.1"
 
     BACKEND_API_KEY: str
-    KAGGLE_DATASET: str
 
     class Config():
         env_file: str = ".env"
@@ -17,7 +16,7 @@ class Settings(BaseSettings):
 settings = Settings()
 
 def validate_key(key: str):
-    if key == BACKEND_API_KEY:
+    if key == settings.BACKEND_API_KEY:
         return True
     else:
         raise HTTPException(status_code=500, detail="Invalid API key")
