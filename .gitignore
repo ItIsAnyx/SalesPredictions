@@ -1,6 +1,7 @@
 backend/api/.idea/
 backend/api/.venv
 backend/api/.env
+backend/api/retail_forecasting_dataset.csv
 backend/api/__pycache__/
 backend/api/database/__pycache__/
 backend/api/my_magazine/__pycache__/

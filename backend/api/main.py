@@ -1,6 +1,7 @@
+import pandas as pd
 from fastapi import FastAPI
-from config import settings
-from dataset import gen_date_conditions
+from config import settings, validate_key
+from dataset import get_or_generate_dataset
 
 app = FastAPI(title=settings.APP_NAME,
               version=settings.APP_VERSION)
@@ -11,5 +12,9 @@ backend_key = settings.BACKEND_API_KEY
 @app.on_event("startup")
 async def Start():
     # Здесь будет условие проверки существования БД. Если БД уже есть, и она заполнена, то загрузка датасета скипнется
-    df = gen_date_conditions(backend_key, "2024-01-01", "2026-01-01")
-    print(df)
+
+    df = get_or_generate_dataset("retail_forecasting_dataset.csv")
+    app.state.dataset = df
+    print("Датасет успешно загружен в приложение.")
+    print(f"Размер датасета: {df.shape}")
+    print(df.head())
