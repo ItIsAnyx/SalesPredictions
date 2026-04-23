@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.0.1"
 
     BACKEND_API_KEY: str
+    DB_USERNAME: str
+    DB_PASSWORD: str
 
     class Config():
         env_file: str = ".env"

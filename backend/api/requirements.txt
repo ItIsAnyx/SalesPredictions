@@ -2,3 +2,6 @@ pandas~=2.3.3
 fastapi~=0.128.0
 python-dotenv~=1.2.1
 pydantic-settings~=2.13.1
+sqlalchemy~=2.0.49
+uvicorn~=0.44.0
+psycopg2~=2.9.12

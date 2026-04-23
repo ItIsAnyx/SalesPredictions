@@ -4,3 +4,6 @@
 
 frontend/node_modules
 frontend/.nuxt/
+
+__pycache__/
+retail_forecasting_dataset.csv
