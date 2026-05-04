@@ -1,7 +1,6 @@
 import pandas as pd
 import random
 import os
-import datetime
 
 region_price = {"North": 1.05, "East": 1.00, "West": 0.98, "South": 0.96}
 category_amplitude = {"Furniture": 0.1, "Toys": 0.35, "Clothing": 0.25, "Groceries": 0.05, "Electronics": 0.15}

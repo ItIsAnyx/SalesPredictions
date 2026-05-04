@@ -1,20 +1,24 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useAuth } from "@/composables/useAuth";
+import { onClickOutside } from '@vueuse/core';
 
-const { fetchUser } = useAuth();
-
-onMounted(() => {
-  fetchUser();
-})
-
+const sideBarRef = ref(null);
 const isSidebarOpen = ref(false)
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value
 }
 
+onClickOutside(sideBarRef, () => {
+  isSidebarOpen.value = false;
+});
 
+const { fetchUser } = useAuth();
+
+onMounted(() => {
+  fetchUser();
+})
 </script>
 
 <template>
@@ -23,7 +27,7 @@ const toggleSidebar = () => {
     <LayoutsAppHeader :open="isSidebarOpen" @toggle-sidebar="toggleSidebar" />
 
     <div class="flex min-h-screen pt-16">
-      <LayoutsAppSideBar :open="isSidebarOpen" @close="isSidebarOpen = false" />
+      <LayoutsAppSideBar ref="sideBarRef" :open="isSidebarOpen" @close="isSidebarOpen = false" />
 
       <main :class="['flex w-full p-container-margin transition-all duration-300',
         isSidebarOpen ? 'ml-[260px]' : 'ml-0']">

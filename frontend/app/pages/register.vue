@@ -31,26 +31,26 @@ const handleRegister = async () => {
     }
 };
 
-// onMounted(() => {
-//     if (isLoggedIn) {
-//         router.push("/");
-//     }
-// });
+onMounted(() => {
+    if (isLoggedIn) {
+        router.push("/");
+    }
+});
 </script>
 
 <template>
-    <main class="flex-grow flex items-center justify-center px-gutter py-xl">
+    <main class="flex-grow flex items-center justify-center">
         <div class="w-full max-w-[440px]">
             <div class="bg-white border border-slate-200 rounded-lg p-lg md:p-xl shadow-xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary to-secondary/60" />
                 <div class="mb-xl">
-                    <h2 class="font-display-lg text-headline-md text-on-surface mb-xs">Join the Platform</h2>
-                    <p class="font-body-md text-slate-500">Access analytical precision and real-time forecasts.</p>
+                    <h2 class="text-lg font-semibold text-on-surface mb-xs">Join the Platform</h2>
+                    <p class="text-slate-500">Access analytical precision and real-time forecasts.</p>
                 </div>
                 <form class="space-y-lg" @submit.prevent="handleRegister">
                     <!-- First Name Input -->
                     <div class="space-y-sm">
-                        <label class="font-label-caps text-label-caps text-slate-600 block uppercase" for="full_name">First Name</label>
+                        <label class="text-slate-600 block" for="full_name">First Name</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="person">person</span>
                             <input v-model="firstName" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="first_name" name="first_name" placeholder="John" type="text"/>
@@ -58,7 +58,7 @@ const handleRegister = async () => {
                     </div>
                     <!-- Last Name Input -->
                     <div class="space-y-sm">
-                        <label class="font-label-caps text-label-caps text-slate-600 block uppercase" for="full_name">Second Name</label>
+                        <label class="text-slate-600 block" for="full_name">Last Name</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="person">person</span>
                             <input v-model="lastName" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="last_name" name="last_name" placeholder="Doe" type="text"/>
@@ -66,7 +66,7 @@ const handleRegister = async () => {
                     </div>
                     <!-- Email Input -->
                     <div class="space-y-sm">
-                        <label class="font-label-caps text-label-caps text-slate-600 block uppercase" for="email">Email Address</label>
+                        <label class="text-slate-600 block" for="email">Email Address</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="mail">mail</span>
                             <input v-model="email" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="email" name="email" placeholder="name@example.com" type="email"/>
@@ -74,7 +74,7 @@ const handleRegister = async () => {
                     </div>
                     <!-- Password Input -->
                     <div class="space-y-sm">
-                        <label class="font-label-caps text-label-caps text-slate-600 block uppercase" for="password">Password</label>
+                        <label class="text-slate-600 block" for="password">Password</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="lock">lock</span>
                             <input v-model="password" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-10 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="password" name="password" placeholder="••••••••" type="password"/>
@@ -85,7 +85,7 @@ const handleRegister = async () => {
                     </div>
                     <!-- Confirm Password Input -->
                     <div class="space-y-sm">
-                        <label class="font-label-caps text-label-caps text-slate-600 block uppercase" for="confirm_password">Confirm Password</label>
+                        <label class="text-slate-600 block" for="confirm_password">Confirm Password</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="verified_user">verified_user</span>
                             <input v-model="repeatPassword" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="confirm_password" name="confirm_password" placeholder="••••••••" type="password"/>
