@@ -1,58 +1,60 @@
-import { ref } from "vue";
-
-const user = ref();
-const isLoggedIn = ref(false);
-
 export const useAuth = () => {
-    const login = async (email: string, password: string) => {
-        // await $fetch("/api/auth/login", {
-        //     method: "POST",
-        //     body: { email, password },
-        //     credentials: "include"
-        // });
+    const auth = useAuthFetch();
 
-        await fetchUser();
+    const user = useState("user", () => null);
+    const isLoggedIn = useState("isLoggedIn", () => false);
+
+    const setUser = (data: any) => {
+        user.value = data;
+        isLoggedIn.value = !!data;
     };
 
-    const register = async (firstName: string, lastName: string, email: string, password: string, repeatPassword: string) => {
-        // await $fetch("/api/auth/register", {
-        //     method: "POST",
-        //     body: { firstName, lastName, email, password, repeatPassword },
-        //     credentials: "include"
-        // });
-        
-        await fetchUser();
-    }
+    const login = async (email: string, password: string) => {
+        const data = await auth.login({ email, password });
+        setUser(data);
+    };
+
+    const register = async (
+        first_name: string,
+        last_name: string,
+        login: string,
+        email: string,
+        password: string,
+        repeat_password: string
+    ) => {
+        const data = await auth.register({ 
+            first_name, 
+            last_name, 
+            login, 
+            email, 
+            password, 
+            repeat_password 
+        });
+
+        console.log(data);
+
+        setUser(data);
+    };
 
     const fetchUser = async () => {
         try {
-            // const data = await $fetch("/api/me", {
-            //     credentials: "include"
-            // });
+            const data = await auth.me();
 
-            const data = {
-                id: 1,
-                name: "Alex",
-                role: "admin",
-                email: "alex@mail.com"
-            };
-
-            user.value = data;
-            isLoggedIn.value = true;
-        } catch (e) {
-            user.value = null;
-            isLoggedIn.value = false;
+            setUser(data);
+        } catch {
+            setUser(null);
         }
     };
 
-    const logout = async () => {
-        // await $fetch("/api/auth/logout", {
-        //     method: "POST",
-        //     credentials: "include"
-        // });
-        user.value = null;
-        isLoggedIn.value = false;
-    }
+    const refresh = async () => {
+        await auth.refresh();
+    };
 
-    return { user, isLoggedIn, login, register, fetchUser, logout }
+    const logout = async () => {
+        await auth.logout();
+
+        setUser(null);
+    };
+
+    return { user, isLoggedIn, login, register, fetchUser, refresh, logout };
 };

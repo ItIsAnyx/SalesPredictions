@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useAuth } from "@/composables/useAuth";
 import { onClickOutside } from '@vueuse/core';
 
 const sideBarRef = ref(null);
@@ -13,12 +12,6 @@ const toggleSidebar = () => {
 onClickOutside(sideBarRef, () => {
   isSidebarOpen.value = false;
 });
-
-const { fetchUser } = useAuth();
-
-onMounted(() => {
-  fetchUser();
-})
 </script>
 
 <template>

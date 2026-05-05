@@ -10,17 +10,19 @@ class Settings(BaseSettings):
 
     DB_USERNAME: str
     DB_PASSWORD: str
-    DB_PORT: int = 5432
-    DB_DATABASE: str = "postgres"
-    DB_HOST: str = "localhost"
+    DB_PORT: int
+    DB_DATABASE: str
+    DB_HOST: str
 
-    COOKIE_SECURE: bool = False
-    COOKIE_SAMESITE: str = "Lax"
+    COOKIE_SECURE: bool
+    COOKIE_SAMESITE: str
 
     SECRET_KEY: str
     ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
+
+    FRONTEND_URL: str
 
     class Config():
         env_file: str = ENV_PATH

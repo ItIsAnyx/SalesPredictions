@@ -60,7 +60,7 @@ def register(payload: RegisterUserRequest, db: Session = Depends(get_db)):
         content=dto.model_dump()
     )
 
-    return create_access_refresh_tokens_to_cookie(response, user)
+    return create_access_refresh_tokens_to_cookie(response, user.email)
 
 @router.get("/refresh")
 def refresh(request: Request):

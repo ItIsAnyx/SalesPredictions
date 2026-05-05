@@ -9,6 +9,7 @@ const router = useRouter();
 
 const firstName = ref("");
 const lastName = ref("");
+const login = ref("");
 const email = ref("");
 const password = ref("");
 const repeatPassword = ref("");
@@ -21,7 +22,7 @@ const handleRegister = async () => {
     error.value = null;
 
     try {
-        await register(firstName.value, lastName.value, email.value, password.value, repeatPassword.value);
+        await register(firstName.value, lastName.value, login.value, email.value, password.value, repeatPassword.value);
 
         router.push("/");
     } catch (e) {
@@ -32,7 +33,7 @@ const handleRegister = async () => {
 };
 
 onMounted(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn.value) {
         router.push("/");
     }
 });
@@ -62,6 +63,14 @@ onMounted(() => {
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="person">person</span>
                             <input v-model="lastName" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="last_name" name="last_name" placeholder="Doe" type="text"/>
+                        </div>
+                    </div>
+                    <!-- Login Input -->
+                    <div class="space-y-sm">
+                        <label class="text-slate-600 block" for="login">Login</label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-secondary transition-colors" data-icon="person">person</span>
+                            <input v-model="login" class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" id="login" name="login" placeholder="JohnDoe" type="text"/>
                         </div>
                     </div>
                     <!-- Email Input -->

@@ -27,7 +27,7 @@ const handleLogin = async () => {
 };
 
 onMounted(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn.value) {
         router.push("/");
     }
 });

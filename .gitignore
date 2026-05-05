@@ -7,3 +7,4 @@ frontend/.nuxt/
 
 __pycache__/
 retail_forecasting_dataset.csv
+backend/alembic/versions/

@@ -25,9 +25,25 @@ services:
     environment:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      BACKEND_API_KEY: ${BACKEND_API_KEY}
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_HOST: database
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      COOKIE_SECURE: ${COOKIE_SECURE}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      FRONTEND_URL: http://localhost:3000
     ports:
       - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
 
 volumes:
   pg-data:
