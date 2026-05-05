@@ -1,6 +1,5 @@
-from database.db import SessionLocal
-from database.tables import Shop, Category, Region, Product, PriceHistory, User
-import pandas as pd
+from db import SessionLocal
+from models import Shop, Category, Region, Product, PriceHistory, User
 
 def get_session():
     return SessionLocal()
