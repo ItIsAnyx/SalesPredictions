@@ -4,9 +4,9 @@ import uvicorn
 from fastapi import FastAPI
 from app.config import settings
 from app.routers.auth import router as auth_router
-from database.db import engine, Base
-from database.populate import populate_db
-from dataset import get_or_generate_dataset
+from app.database.db import engine, Base
+from app.database.populate import populate_db
+from app.database.dataset import get_or_generate_dataset
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(

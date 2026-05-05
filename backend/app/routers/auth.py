@@ -5,9 +5,9 @@ from app.auth.service import create_access_refresh_tokens_to_cookie, set_access_
 from app.schemas.user import UserDto
 from app.schemas.auth import LoginUserRequest, RegisterUserRequest
 from app.services.user_service import login_user, register_user
-from app.database import get_db
+from app.database.db import get_db
 from sqlalchemy.orm import Session
-from app.models import User
+from app.database.models import User
 
 router = APIRouter()
 

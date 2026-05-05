@@ -1,5 +1,6 @@
-from db import SessionLocal
-from models import Shop, Category, Region, Product, PriceHistory, User
+from app.database.db import SessionLocal
+from app.database.models import Shop, Category, Region, Product, PriceHistory, User
+from app.auth.service import hash_password
 
 def get_session():
     return SessionLocal()
@@ -47,7 +48,8 @@ def create_default_user(session):
         email="test@test.com",
         login="test",
         first_name="Test",
-        second_name="User"
+        last_name="User",
+        password=hash_password("123123123")
     )
     session.add(user)
     session.flush()
