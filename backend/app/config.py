@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from pathlib import Path
+from fastapi import HTTPException
 
 ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
@@ -26,3 +27,9 @@ class Settings(BaseSettings):
         case_sensitive: bool = True
 
 settings = Settings()
+
+def validate_key(key: str):
+    if key == settings.BACKEND_API_KEY:
+        return True
+    else:
+        raise HTTPException(status_code=500, detail="Invalid API key")

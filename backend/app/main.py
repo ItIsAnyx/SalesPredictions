@@ -4,9 +4,12 @@ import uvicorn
 from fastapi import FastAPI
 from app.config import settings
 from app.routers.auth import router as auth_router
-from database.tables import Base
-from database.db import engine
+from database.db import engine, Base
 from database.populate import populate_db
+from dataset import get_or_generate_dataset
+
+# Загрузка всех ключей
+backend_key = settings.BACKEND_API_KEY
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -14,9 +17,6 @@ app = FastAPI(
 )
 
 app.include_router(auth_router, prefix="/api/auth")
-    
-# Загрузка всех ключей
-backend_key = settings.BACKEND_API_KEY
 
 @app.on_event("startup")
 async def Start():
