@@ -1,3 +1,16 @@
+<script setup>
+import { onMounted } from "vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+
+const productId = route.params.productId;
+
+onMounted(() => {
+
+});
+</script>
+
 <template>
     <div class="mx-auto p-gutter space-y-lg">
     <!-- Product Header Section -->

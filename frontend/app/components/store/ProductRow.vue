@@ -2,6 +2,7 @@
 const props = defineProps({
     product: Object
 })
+const emit = defineEmits(["update-price"]);
 
 const isGrowing = props.product.forecast_trend_percent > 0
 
@@ -9,8 +10,6 @@ const secondary = "#006a61";
 const error = "#ba1a1a";
 
 const barStyle = (i) => {
-  const maxHeight = 24;
-
   const height = isGrowing
     ? (i + 2) * 4
     : (6 - i) * 4;
@@ -70,7 +69,10 @@ const barStyle = (i) => {
         </td>
 
         <td class="px-md py-md flex justify-end">
-            <button class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg gap-sm hover:opacity-90">
+            <button
+                class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg hover:opacity-90"
+                @click="emit('update-price', product)"
+            >
                 Update Price
             </button>
         </td>

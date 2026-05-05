@@ -22,14 +22,14 @@ const fetchProducts = async (page) => {
     total_pages: 100,
     items: [
       {
+        product_id: "mf73i3njhfuerufiom23io4h32",
         product_name: "Core Processor X1",
-        product_sku: "CP-X1-2024",
         current_price: 429.5,
         forecast_trend_percent: 2.4
       },
       {
+        product_id: "mfhr349238udjfeuusdfsdfsdf",
         product_name: "Solid State Drive 2TB",
-        product_sku: "SSD-2TB-PRO",
         current_price: 185.0,
         forecast_trend_percent: -1.1
       }
@@ -73,7 +73,6 @@ const visiblePages = computed(() => {
 <template>
   <section class="p-md md:p-lg max-w-[1280px] w-full mx-auto space-y-lg">
 
-    <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-md">
       <div class="bg-white border border-surface-container p-md rounded-lg flex flex-col justify-between">
         <span class="text-outline text-[11px] font-bold uppercase">Total Products</span>
@@ -172,4 +171,8 @@ const visiblePages = computed(() => {
 
     </div>
   </section>
+
+  <div>
+
+  </div>
 </template>

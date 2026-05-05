@@ -2,6 +2,8 @@
 import { useRoute, useRouter } from "vue-router";
 import { ref, watch, onMounted } from "vue";
 import ProductRow from '~/components/store/ProductRow.vue';
+import AddProductWindow from "~/components/store/AddProductWindow.vue";
+import UpdatePriceWindow from "~/components/store/UpdatePriceWindow.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +14,29 @@ const products = ref([]);
 const totalProducts = ref();
 const totalChange = ref();
 const totalPages = ref();
+
+const selectedUpdatedProduct = ref(null);
+const menuUpdatedOpen = ref(false);
+
+const openUpdatePrice = (product) => {
+  selectedUpdatedProduct.value = product;
+  menuUpdatedOpen.value = true;
+};
+
+const closeModal = () => {
+  menuUpdatedOpen.value = false;
+  selectedUpdatedProduct.value = null;
+};
+
+const menuAddOpen = ref(false);
+
+const toggleMenu = () => {
+  menuAddOpen.value = !menuAddOpen.value;
+};
+
+onMounted(() => {
+  fetchProducts(currentPage.value);
+});
 
 const fetchProducts = async (page) => {
   // await $fetch(`/api/products?page=${page}`);
@@ -51,10 +76,6 @@ watch(currentPage, async (page) => {
   await fetchProducts(page);
 });
 
-onMounted(() => {
-  fetchProducts(currentPage.value);
-});
-
 const visiblePages = computed(() => {
   const total = totalPages.value;
   const current = currentPage.value;
@@ -87,7 +108,7 @@ const visiblePages = computed(() => {
       </div>
 
       <div class="flex">
-        <button class="flex items-center gap-xs px-md py-sm bg-secondary text-white text-sm font-semibold rounded-lg hover:opacity-90">
+        <button @click="toggleMenu" class="flex items-center gap-xs px-md py-sm bg-secondary text-white text-sm font-semibold rounded-lg hover:opacity-90">
           <span class="material-symbols-outlined text-[18px]">add</span>
           Add New Product
         </button>
@@ -135,6 +156,7 @@ const visiblePages = computed(() => {
               <ProductRow v-for="product in products"
                 :key="product.product_sku"
                 :product="product"
+                @update-price="openUpdatePrice"
               />
             </tbody>
           </table>
@@ -168,6 +190,15 @@ const visiblePages = computed(() => {
           </div>
         </div>
       </div>
-
     </main>
+    <div v-if="menuAddOpen" @click="toggleMenu" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div @click.stop>
+        <AddProductWindow />
+      </div>
+    </div>
+    <div v-if="menuUpdatedOpen" @click="closeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div @click.stop>
+        <UpdatePriceWindow :product="selectedUpdatedProduct"/>
+      </div>
+    </div>
 </template>

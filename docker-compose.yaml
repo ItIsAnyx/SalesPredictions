@@ -15,19 +15,19 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
-    build:
-      context: ./backend/api
-    container_name: backend
-    depends_on:
-      database:
-        condition: service_healthy
-    environment:
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      BACKEND_API_KEY: ${BACKEND_API_KEY}
-    ports:
-      - "8080:8080"
+  # backend:
+  #   build:
+  #     context: ./backend/api
+  #   container_name: backend
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #   environment:
+  #     DB_USERNAME: ${DB_USERNAME}
+  #     DB_PASSWORD: ${DB_PASSWORD}
+  #     BACKEND_API_KEY: ${BACKEND_API_KEY}
+  #   ports:
+  #     - "8080:8080"
 
 volumes:
   pg-data:
