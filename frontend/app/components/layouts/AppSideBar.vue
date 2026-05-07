@@ -1,4 +1,8 @@
 <script setup>
+import { useAuth } from "@/composables/useAuth";
+
+const { isLoggedIn } = useAuth();
+
 const props = defineProps({
   open: Boolean
 })
@@ -28,9 +32,9 @@ const emit = defineEmits(['close'])
           Dashboard
     </NuxtLink>
 
-    <NuxtLink class="text-slate-600 hover:text-teal-600 flex items-center px-4 py-3 transition-all cursor-pointer text-sm font-medium tracking-wide"
+    <NuxtLink v-if="isLoggedIn" class="text-slate-600 hover:text-teal-600 flex items-center px-4 py-3 transition-all cursor-pointer text-sm font-medium tracking-wide"
       active-class="text-teal-500 hover:text-teal-600 bg-surface-container-highest/50 border-r-4 border-secondary font-bold"
-      to="/store">
+      to="/stores">
       <span class="material-symbols-outlined mr-3">storefront</span>
           My Store
     </NuxtLink>

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
-from app.auth.auth_tokens import refresh_access_token, verify_token
-from app.auth.service import create_access_refresh_tokens_to_cookie, set_access_refresh_tokens_to_cookie
+from app.auth.auth_tokens import refresh_access_token
+from app.auth.service import create_access_refresh_tokens_to_cookie, set_access_refresh_tokens_to_cookie, get_current_user
 from app.schemas.user import UserDto
 from app.schemas.auth import LoginUserRequest, RegisterUserRequest
 from app.services.user_service import login_user, register_user
@@ -104,37 +104,5 @@ def logout():
     return response
 
 @router.get("/me", response_model=UserDto)
-def me(request: Request, db: Session = Depends(get_db)):
-    access_token = request.cookies.get("access_token")
-
-    if not access_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No access token"
-        )
-
-    payload = verify_token(access_token, "access")
-
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token expired or invalid"
-        )
-
-    try:
-        email = payload.get("sub")
-    except (TypeError, ValueError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload"
-        )
-
-    user = db.query(User).filter(User.email == email).first()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-
+def me(user: User = Depends(get_current_user)):
     return UserDto.model_validate(user)

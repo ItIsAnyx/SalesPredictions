@@ -1,7 +1,9 @@
 <script setup>
 import { useRoute, useRouter } from "vue-router";
 import { ref, watch, onMounted } from "vue";
-import ProductRow from '~/components/products/ProductRow.vue';
+import StoreProductRow from '@/components/store/StoreProductRow.vue';
+import AddProductWindow from "@/components/store/AddProductWindow.vue";
+import UpdatePriceWindow from "@/components/store/UpdatePriceWindow.vue";
 import { useApiFetch } from "@/composables/useApiFetch";
 
 const route = useRoute();
@@ -9,15 +11,19 @@ const router = useRouter();
 
 const api = useApiFetch();
 
+const storeId = computed(() => route.params.storeId);
+
 const currentPage = ref(Number(route.query.page) || 1);
 const selectedRegion = ref(null);
 
-const regionOptions = ref([]);
-
 const products = ref([]);
-const totalProducts = ref();
-const growth = ref();
-const totalPages = ref();
+const totalProducts = ref(0);
+const totalPages = ref(0);
+
+const selectedUpdateProduct = ref(null);
+const menuUpdateOpen = ref(false);
+
+const regionOptions = ref([]);
 
 watch(selectedRegion, async () => {
   currentPage.value = 1;
@@ -29,8 +35,27 @@ watch(selectedRegion, async () => {
     }
   });
   await fetchProducts(currentPage.value);
-  await fetchGrowth();
 });
+
+const openUpdatePrice = (product) => {
+  selectedUpdateProduct.value = product;
+  menuUpdateOpen.value = true;
+};
+
+const closeModal = () => {
+  menuUpdateOpen.value = false;
+  selectedUpdateProduct.value = null;
+};
+
+const menuAddOpen = ref(false);
+
+const toggleMenu = () => {
+  menuAddOpen.value = !menuAddOpen.value;
+};
+
+const toggleUpdateMenu = () => {
+  menuUpdateOpen.value = !menuUpdateOpen.value;
+};
 
 onMounted(async () => {
   currentPage.value = Number(route.query.page) || 1;
@@ -42,7 +67,6 @@ onMounted(async () => {
   }
 
   await fetchProducts(currentPage.value);
-  await fetchGrowth();
   await fetchMetaRegions();
 });
 
@@ -62,7 +86,7 @@ const fetchProducts = async (page = 1) => {
   }
 
   const res = await api.request(
-    `/api/products?${params.toString()}`
+    `/api/stores/${storeId.value}/products?${params.toString()}`
   );
 
   products.value = res.items;
@@ -70,19 +94,6 @@ const fetchProducts = async (page = 1) => {
   totalProducts.value = res.total_items;
 };
 
-const fetchGrowth = async () => {
-  const params = new URLSearchParams();
-
-  if (selectedRegion.value) {
-    params.append("region_id", selectedRegion.value.id);
-  }
-
-  const growth_res = await api.request(
-    `/api/products/growth?${params.toString()}`
-  )
-
-  growth.value = growth_res.growth;
-}
 watch(currentPage, async (page) => {
   router.replace({
     query: {
@@ -113,46 +124,42 @@ const visiblePages = computed(() => {
 </script>
 
 <template>
-  <section class="p-md md:p-lg max-w-[1280px] w-full mx-auto space-y-lg">
+  <main class="flex flex-col p-md md:p-lg max-w-[1280px] w-full mx-auto space-y-lg">
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-md">
-      <div class="bg-white border border-surface-container p-md rounded-lg flex flex-col justify-between">
-        <span class="text-outline text-[11px] font-bold uppercase">Total Products</span>
-        <div class="flex items-baseline gap-sm mt-sm">
-          <span class="text-2xl font-bold text-on-surface">{{ totalProducts }}</span>
-          <span class="text-xs font-bold"
-            :class="growth > 0 ? 'text-secondary' : 'text-error'"
-          >
-            {{ growth > 0 ? '+' : '' }}{{growth}}
-        </span>
-        </div>
+    <!-- Header -->
+    <div class="mb-xl flex justify-between">
+      <div>
+        <h2 class="font-manrope text-2xl font-bold text-on-surface">
+          My Store
+        </h2>
+        <p class="font-inter text-sm text-on-surface mt-xs">
+          Manage your product catalog and manual price entries.
+        </p>
       </div>
 
-      <div class="bg-white border border-surface-container p-md rounded-lg flex flex-col justify-between">
-        <span class="text-outline text-[11px] font-bold uppercase">Avg. Price Stability</span>
-        <div class="flex items-baseline gap-sm mt-sm">
-          <span class="text-2xl font-bold text-on-surface">94.2%</span>
-          <span class="text-secondary text-xs font-bold">Stable</span>
-        </div>
+      <div class="flex">
+        <button @click="toggleMenu"
+          class="flex items-center gap-xs px-md py-sm bg-secondary text-white text-sm font-semibold rounded-lg hover:opacity-90">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          Add New Product
+        </button>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white border border-surface-container rounded-lg shadow-sm">
+    <!-- TABLE -->
+    <div class="bg-white border border-surface-container rounded-lg overflow-hidden shadow-sm">
 
-      <!-- Controls -->
       <div class="px-md py-md border-b border-surface-container-low flex items-center justify-between">
-        <h3 class="font-bold text-lg text-on-surface">Product Catalog</h3>
+        <h3 class="font-bold text-lg text-on-surface">
+          Inventory Overview
+        </h3>
 
         <div>
           <DropoutMenuRegions v-model="selectedRegion" :items="regionOptions" placeholder="Select region" />
         </div>
 
-        <div class="flex items-center gap-sm">
-          <button class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg flex items-center gap-sm hover:opacity-90">
-            <span class="material-symbols-outlined text-sm">download</span>
-            Export CSV
-          </button>
+        <div class="flex items-center gap-md text-sm text-outline">
+          <span>{{ totalProducts }} Active Products</span>
         </div>
       </div>
 
@@ -163,65 +170,66 @@ const visiblePages = computed(() => {
           <thead>
             <tr class="bg-surface-container-low">
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                Product Name
+                Product
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                Store Name
+                Price
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                Current Price
+                Updated
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                7-Day Forecast Trend
+                Last Change Forecast Trend
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container text-right">
-                See forecast
+                Update
               </th>
             </tr>
           </thead>
 
           <tbody class="divide-y divide-surface-container-low">
-            <ProductRow v-for="product in products"
-              :key="product.product_sku"
-              :product="product"
-              />
+            <StoreProductRow v-for="product in products" :key="product.product_id" :product="product"
+              @update-price="openUpdatePrice" />
           </tbody>
         </table>
       </div>
 
-      <div class="px-md py-sm border-t border-surface-container flex items-center justify-between text-outline text-[11px] font-bold uppercase">
-        <p>Showing {{ currentPage === 1 ? currentPage : (currentPage - 1) * 20 }} to {{ currentPage * 20 - 1 > totalProducts ? totalProducts : currentPage * 20 - 1 }} of {{ totalProducts }} products</p>
+      <div
+        class="px-md py-sm border-t border-surface-container flex items-center justify-between text-outline text-[11px] font-bold uppercase">
+        <p>Showing {{ currentPage === 1 ? currentPage : (currentPage - 1) * 20 }} to {{ currentPage * 20 - 1 >
+          totalProducts ? totalProducts : currentPage * 20 - 1 }} of {{
+            totalProducts }} products</p>
 
         <div class="flex items-center gap-xs">
           <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low"
-            @click="currentPage--" :disabled="currentPage === 1"
-          >
+            @click="currentPage--" :disabled="currentPage === 1">
             <span class="material-symbols-outlined text-[18px]">chevron_left</span>
           </button>
 
-          <button
-            v-for="page in visiblePages"
-            :key="page"
-            @click="currentPage = page"
+          <button v-for="page in visiblePages" :key="page" @click="currentPage = page"
             class="w-8 h-8 flex items-center justify-center rounded"
-            :class="page === currentPage ? 'bg-secondary text-white' : 'hover:bg-surface-container-low'"
-          >
+            :class="page === currentPage ? 'bg-secondary text-white' : 'hover:bg-surface-container-low'">
             {{ page }}
           </button>
 
           <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low"
-            @click="currentPage++"
-            :disabled="currentPage * 20 - 1 > totalProducts"
-          >
+            @click="currentPage++" :disabled="currentPage * 20 - 1 > totalProducts">
             <span class="material-symbols-outlined text-[18px]">chevron_right</span>
           </button>
         </div>
       </div>
-
     </div>
-  </section>
-
-  <div>
-
+  </main>
+  <div v-if="menuAddOpen" @click="toggleMenu" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    <div @click.stop>
+      <AddProductWindow :store-id="storeId" @close="toggleMenu" @updated="fetchProducts(currentPage)" />
+    </div>
+  </div>
+  <div v-if="menuUpdateOpen" @click="closeModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    <div @click.stop>
+      <UpdatePriceWindow :product="selectedUpdateProduct" @close="toggleUpdateMenu"
+        @updated="fetchProducts(currentPage)" />
+    </div>
   </div>
 </template>

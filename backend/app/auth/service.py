@@ -1,7 +1,10 @@
-from fastapi import Response
+from fastapi import Response, Request, HTTPException, Depends, status
 from app.config import settings
-from app.auth.auth_tokens import create_access_token, create_refresh_token
+from app.auth.auth_tokens import create_access_token, create_refresh_token, verify_token
 from pwdlib import PasswordHash
+from sqlalchemy.orm import Session
+from app.database.models import User
+from app.database.db import get_db
 
 password_hash = PasswordHash.recommended()
 
@@ -45,3 +48,25 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed_password: str) -> bool:
     return password_hash.verify(password, hashed_password)
+
+def get_current_user(
+    request: Request,
+    db: Session = Depends(get_db)
+) -> User:
+    token = request.cookies.get("access_token")
+
+    if not token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "No token")
+
+    try:
+        payload = verify_token(token, "access")
+        email = payload.get("sub")
+    except Exception:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+    return user

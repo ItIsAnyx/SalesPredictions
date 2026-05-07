@@ -13,72 +13,83 @@ class User(Base):
     last_name = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)
 
-    shops = relationship("Shop", back_populates="owner")
+    stores = relationship("Store", back_populates="owner")
 
-class Shop(Base):
-    __tablename__ = "shops"
+class Store(Base):
+    __tablename__ = "stores"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
     title = Column(String(100), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    shop_owner = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
-    owner = relationship("User", foreign_keys=[shop_owner], back_populates="shops")
+    owner = relationship("User", back_populates="stores")
+    products = relationship("Product", back_populates="store")
 
 class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
     title = Column(String(64), nullable=False)
 
+    products = relationship("Product", back_populates="category")
+
 class Region(Base):
     __tablename__ = "regions"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
     title = Column(String(64), nullable=False)
 
+    price_histories = relationship("PriceHistory", back_populates="region")
+
 class Product(Base):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
     title = Column(String(255), nullable=False)
-    shop_id = Column(Integer, ForeignKey('shops.id'), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    store_id = Column(Integer, ForeignKey('stores.id'), nullable=False)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
-    region_id = Column(Integer, ForeignKey('regions.id'), nullable=False)
 
-    shop = relationship("Shop")
-    category = relationship("Category")
-    region = relationship("Region")
+    store = relationship("Store", back_populates="products")
+    category = relationship("Category", back_populates="products")
+    price_histories = relationship("PriceHistory", back_populates="product")
 
 class PriceHistory(Base):
     __tablename__ = "price_histories"
     __table_args__ = (Index("ix_product_time", "product_id", "changed_at"),)
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
-    price = Column(DECIMAL(10, 2), nullable=False)
+    price = Column(DECIMAL(10, 2, asdecimal=True), nullable=False)
     changed_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    changed_by = Column(Integer, ForeignKey('users.id'), nullable=False)
-
-    product = relationship("Product")
-    changed_by_user = relationship("User")
-
-    # Необязательные столбцы, т. к. вряд ли пользователь станет указывать сезон, погоду и выходные,
-    # но можно будет автоматически подтягивать данные с помощью каких-нибудь модулей и доп. функционала
-    season = Column(String(10), nullable=True)
-    weather_condition = Column(String(10), nullable=True)
+    region_id = Column(Integer, ForeignKey('regions.id'), nullable=False)
+    season = Column(
+        Enum("Spring", "Winter", "Summer", "Autumn", name="price_history_season"),
+        nullable=False
+    )
+    weather_condition = Column(
+        Enum("Sunny", "Rainy", "Snowy", "Cloudy", name="price_history_weather_condition"),
+        nullable=False
+    )
     weekend = Column(Boolean, nullable=True)
 
-# --- Подписки ---
+    product = relationship("Product", back_populates="price_histories")
+    region = relationship("Region", back_populates="price_histories")
 
+# --- Подписки ---
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
     name = Column(String(64), nullable=False)
-    price = Column(DECIMAL(10, 2), nullable=False) # Цена за месяц
+    price = Column(DECIMAL(10, 2, asdecimal=True), nullable=False)
 
 class PurchaseHistory(Base):
     __tablename__ = "purchase_histories"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
     start_date = Column(TIMESTAMP(timezone=True), nullable=False)
     end_date = Column(TIMESTAMP(timezone=True), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
     total_price = Column(DECIMAL(10, 2), nullable=False)
-    status = Column(Enum("active", "expired", "cancelled", "inactive", name="subscription_status", create_type=False), nullable=False)
+    status = Column(
+        Enum("active", "expired", "cancelled", "inactive", name="subscription_status"),
+        nullable=False
+    )
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     sub_id = Column(Integer, ForeignKey('subscriptions.id'), nullable=False)
 

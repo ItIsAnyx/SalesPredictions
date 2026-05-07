@@ -1,6 +1,5 @@
 export const useApiFetch = () => {
   const api = useBaseFetch();
-  const authApi = useAuthFetch();
   const router = useRouter();
 
   let isRefreshing = false;
@@ -21,7 +20,7 @@ export const useApiFetch = () => {
       isRefreshing = true;
 
       try {
-        await authApi.refresh();
+        await api("/api/auth/refresh");
 
         isRefreshing = false;
 

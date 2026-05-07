@@ -3,14 +3,12 @@ const props = defineProps({
     product: Object
 })
 
-const isGrowing = props.product.forecast_trend_percent > 0
+const isGrowing = props.product.diff_percent > 0
 
 const secondary = "#006a61";
 const error = "#ba1a1a";
 
 const barStyle = (i) => {
-  const maxHeight = 24;
-
   const height = isGrowing
     ? (i + 2) * 4
     : (6 - i) * 4;
@@ -34,13 +32,22 @@ const barStyle = (i) => {
         <td class="px-md py-md">
             <div class="flex items-center gap-md">
                 <div>
-                    <p class="font-bold text-on-surface text-sm">{{ product.product_name }}</p>
+                    <p class="font-bold text-on-surface text-sm">{{ product.title }}</p>
+                <p class="text-[11px] text-outline">SKU: {{ product.product_id }}</p>
+                </div>
+            </div>
+        </td>
+
+        <td class="px-md py-md">
+            <div class="flex items-center gap-md">
+                <div>
+                    <p class="text-on-surface text-sm">{{ product.store_title || None }}</p>
                 </div>
             </div>
         </td>
 
         <td class="px-md py-md text-sm font-medium text-on-surface">
-            ${{ product.current_price.toFixed(2) }}
+            ₽{{ product.avg_last_price?.toFixed(2) || 0}}
         </td>
 
         <td class="px-md py-md">
@@ -59,7 +66,7 @@ const barStyle = (i) => {
                 <span class="material-symbols-outlined text-[14px]">
                     {{ isGrowing ? "trending_up" : "trending_down" }}
                 </span>
-                    {{ isGrowing ? "+" : ""}}{{ product.forecast_trend_percent }}%
+                    {{ isGrowing ? "+" : ""}}{{ product.diff_percent?.toFixed(2) || 0 }}%
                 </span>
             </div>
         </td>

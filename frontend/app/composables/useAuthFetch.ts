@@ -1,11 +1,12 @@
 export const useAuthFetch = () => {
-  const api = useBaseFetch();
+  const baseFetch = useBaseFetch();
+  const apiFetch = useApiFetch();
 
   return {
-    login: (body: any) => api("/api/auth/login", { method: "POST", body }),
-    register: (body: any) => api("/api/auth/register", { method: "POST", body }),
-    me: () => api("/api/auth/me"),
-    logout: () => api("/api/auth/logout", { method: "POST" }),
-    refresh: () => api("/api/auth/refresh"),
+    login: (body: any) => baseFetch("/api/auth/login", { method: "POST", body }),
+    register: (body: any) => baseFetch("/api/auth/register", { method: "POST", body }),
+    me: () => apiFetch.request("/api/auth/me"),
+    logout: () => baseFetch("/api/auth/logout", { method: "POST" }),
+    refresh: () => baseFetch("/api/auth/refresh"),
   };
 };

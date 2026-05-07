@@ -1,5 +1,5 @@
 from app.database.db import SessionLocal
-from app.database.models import Shop, Category, Region, Product, PriceHistory, User
+from app.database.models import Store, Category, Region, Product, PriceHistory, User
 from app.auth.service import hash_password
 
 def get_session():
@@ -7,11 +7,11 @@ def get_session():
 
 # Извлечение уникальных сущностей
 def extract_unique_entities(df):
-    shops = df["Store"].unique()
+    stores = df["Store"].unique()
     categories = df["Category"].unique()
     regions = df["Region"].unique()
 
-    return shops, categories, regions
+    return stores, categories, regions
 
 # Вставка категорий товаров, регионов и магазинов
 def insert_categories(session, categories):
@@ -56,28 +56,27 @@ def create_default_user(session):
 
     return user.id
 
-def insert_shops(session, shops, user_id):
-    shop_map = {}
-    for shop in shops:
-        obj = Shop(title=shop, shop_owner=user_id)
+def insert_stores(session, stores, user_id):
+    store_map = {}
+    for store in stores:
+        obj = Store(title=store, user_id=user_id)
         session.add(obj)
         session.flush()
-        shop_map[shop] = obj.id
+        store_map[store] = obj.id
 
-    return shop_map
+    return store_map
 
 # Вставка информации о продуктах
-def insert_products(session, df, shop_map, category_map, region_map):
+def insert_products(session, df, store_map, category_map):
     product_map = {}
-    unique_products = df[["Product", "Store", "Category", "Region"]].drop_duplicates()
+    unique_products = df[["Product", "Store", "Category"]].drop_duplicates()
 
     for _, row in unique_products.iterrows():
-        key = (row["Product"], row["Store"], row["Region"])
+        key = (row["Product"], row["Store"])
         obj = Product(
             title=row["Product"],
-            shop_id=shop_map[row["Store"]],
-            category_id=category_map[row["Category"]],
-            region_id=region_map[row["Region"]],
+            store_id=store_map[row["Store"]],
+            category_id=category_map[row["Category"]]
         )
 
         session.add(obj)
@@ -87,17 +86,17 @@ def insert_products(session, df, shop_map, category_map, region_map):
     return product_map
 
 # Информация обо всех изменениях цен
-def insert_price_history(session, df, product_map, user_id):
+def insert_price_history(session, df, product_map, region_map):
     objects = []
 
     for _, row in df.iterrows():
-        key = (row["Product"], row["Store"], row["Region"])
+        key = (row["Product"], row["Store"])
 
         obj = PriceHistory(
             price=row["Price"],
             changed_at=row["Date"],
             product_id=product_map[key],
-            changed_by=user_id,
+            region_id=region_map[row["Region"]],
             season=row["Season"],
             weather_condition=row["Weather Condition"],
             weekend=row["Weekend"],
@@ -121,7 +120,7 @@ def populate_db(df):
             session.close()
             return
 
-        shops, categories, regions = extract_unique_entities(df)
+        stores, categories, regions = extract_unique_entities(df)
         user_id = create_default_user(session)
 
         category_map = insert_categories(session, categories)
@@ -130,13 +129,13 @@ def populate_db(df):
         region_map = insert_regions(session, regions)
         print(f"Добавлено {len(region_map)} регионов")
 
-        shop_map = insert_shops(session, shops, user_id)
-        print(f"Добавлено {len(shop_map)} магазинов")
+        store_map = insert_stores(session, stores, user_id)
+        print(f"Добавлено {len(store_map)} магазинов")
 
-        product_map = insert_products(session, df, shop_map, category_map, region_map)
+        product_map = insert_products(session, df, store_map, category_map)
         print(f"Добавлено {len(product_map)} продуктов")
 
-        price_history = insert_price_history(session, df, product_map, user_id)
+        price_history = insert_price_history(session, df, product_map, region_map)
         print(f"Добавлено {len(price_history)} изменений цен на продукты")
 
         session.commit()

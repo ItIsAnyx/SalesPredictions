@@ -1,0 +1,34 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.database.db import get_db
+from app.database.models import PriceHistory, Region, Category
+
+router = APIRouter()
+
+@router.get("/meta/price-history-options")
+def get_price_options(db: Session = Depends(get_db)):
+    return get_season_weather_region(db)
+
+@router.get("/meta/create-product-options")
+def get_product_options(db: Session = Depends(get_db)):
+    categories = db.query(Category).all()
+
+    body = get_season_weather_region(db)
+    body["categories"] = categories
+    
+    return body
+
+@router.get("/meta/regions")
+def get_regions(db: Session = Depends(get_db)):
+    return {
+        "regions": db.query(Region).all()
+    }
+
+def get_season_weather_region(db: Session):
+    regions = db.query(Region).all()
+
+    return {
+        "seasons": PriceHistory.__table__.columns["season"].type.enums,
+        "weather_conditions": PriceHistory.__table__.columns["weather_condition"].type.enums,
+        "regions": regions
+    }

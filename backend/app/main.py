@@ -3,11 +3,15 @@ import pandas as pd
 import uvicorn
 from fastapi import FastAPI
 from app.config import settings
-from app.routers.auth import router as auth_router
 from app.database.db import engine, Base
 from app.database.populate import populate_db
 from app.database.dataset import get_or_generate_dataset
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.routers.auth import router as auth_router
+from app.routers.store import router as store_router
+from app.routers.meta import router as meta_router
+from app.routers.product import router as product_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -23,6 +27,9 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/api/auth")
+app.include_router(store_router, prefix="/api/stores")
+app.include_router(meta_router, prefix="/api")
+app.include_router(product_router, prefix="/api/products")
 
 @app.on_event("startup")
 async def Start():
