@@ -209,7 +209,7 @@ def generate_price_series(date_df: pd.DataFrame, region: str, category: str, ini
     return df
 
 # Генерирует полный датасет для всех магазинов и товаров. Возвращает один большой DataFrame.
-def generate_full_dataset(start_date: str = '2024-01-01', end_date: str = '2026-01-01') -> pd.DataFrame:
+def generate_full_dataset(start_date: str = '2024-01-01', end_date: str = '2026-05-05') -> pd.DataFrame:
     print("Генерация календаря с погодными условиями...")
     date_df = gen_date_conditions(start_date, end_date)
 

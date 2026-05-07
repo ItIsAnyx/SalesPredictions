@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import uvicorn
+import random
 from fastapi import FastAPI
 from app.config import settings
 from app.database.db import engine, Base
@@ -13,6 +14,7 @@ from app.routers.store import router as store_router
 from app.routers.meta import router as meta_router
 from app.routers.product import router as product_router
 
+random.seed(67)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION

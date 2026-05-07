@@ -7,6 +7,8 @@ from app.schemas.product import ProductPriceUpdateDto, ProductCreateDto, Product
 from sqlalchemy import text
 from math import ceil
 from datetime import datetime, timedelta
+import pandas as pd
+from app.ml_models.ml_models import train_predict_model
 
 router = APIRouter()
 
@@ -209,15 +211,63 @@ def get_product(
     )
 
 @router.get("/{product_id}/prices")
-def get_prices(product_id: int, 
-               range: int = Query(default=10000), 
+def get_prices(product_id: int,
+               region_id: int = 1,
+               range_milisec: int = Query(default=1_000_000_000),
                db: Session = Depends(get_db)
                ):
-    return
+    today = datetime.utcnow()
+    range_day = today - timedelta(milliseconds=range_milisec)
+
+    data_query = text("""
+    SELECT changed_at, price FROM price_histories
+    WHERE product_id = :product_id AND changed_at >= :range_day AND region_id = :region_id
+    ORDER BY changed_at ASC
+    """)
+    price_history = db.execute(data_query, {"product_id": product_id, "range_day": range_day, "region_id": region_id}).mappings().all()
+    result = [
+        {
+            "timestamp": item["changed_at"].strftime("%d-%m-%Y %H:%M:%S"),
+            "price": float(item["price"]) if item["price"] else None
+        }
+        for item in price_history
+    ]
+
+    return result
+
+def get_price_history_for_model(product_id: int,
+                                region_id: int = 1,
+                                range_milisec: int = Query(default=1_000_000_000_000),
+                                db: Session = Depends(get_db)
+                                ):
+    today = datetime.utcnow()
+    range_day = today - timedelta(milliseconds=range_milisec)
+
+    data_query = text("""
+    SELECT changed_at, price, season, weather_condition, weekend FROM price_histories
+    WHERE product_id = :product_id AND changed_at >= :range_day AND region_id = :region_id
+    ORDER BY changed_at ASC
+    """)
+    price_history = db.execute(data_query, {"product_id": product_id, "range_day": range_day, "region_id": region_id}).mappings().all()
+    df = pd.DataFrame(price_history)
+    print("get_price_history_for_model")
+    print(df.head())
+    print(df.tail())
+
+    return df
 
 @router.get("/{product_id}/prices-prediction")
-def get_prices(product_id: int, 
-               range: int = Query(default=10000),
+def get_prices(product_id: int,
+               region_id: int = 1,
+               range_milisec: int = Query(default=1_000_000_000_000),
+               predict_days: int = 7,
                db: Session = Depends(get_db)
                ):
-    return
+    try:
+        df = get_price_history_for_model(product_id, region_id, range_milisec, db)
+        result = train_predict_model(df, range_days=predict_days, is_debugging=True)
+        return result
+
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error when trying to predict prices: {str(e)}")
