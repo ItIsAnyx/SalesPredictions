@@ -13,6 +13,7 @@ from app.routers.auth import router as auth_router
 from app.routers.store import router as store_router
 from app.routers.meta import router as meta_router
 from app.routers.product import router as product_router
+from app.routers.metrics import router as metrics_router
 
 random.seed(67)
 app = FastAPI(
@@ -32,6 +33,7 @@ app.include_router(auth_router, prefix="/api/auth")
 app.include_router(store_router, prefix="/api/stores")
 app.include_router(meta_router, prefix="/api")
 app.include_router(product_router, prefix="/api/products")
+app.include_router(metrics_router, prefix="/api/metrics")
 
 @app.on_event("startup")
 async def Start():

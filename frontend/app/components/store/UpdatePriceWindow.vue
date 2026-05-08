@@ -75,7 +75,7 @@ onMounted(() => {
                         class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-5 w-5 text-slate-400 group-focus-within:text-secondary transition-colors">
                         $
                     </span>
-                    <input v-model="price" id="price" name="price" type="number" step="0.01" placeholder="0.00"
+                    <input v-model="selectedPrice" id="price" name="price" type="number" step="0.01" placeholder="0.00"
                         class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg py-3 pl-10 pr-10 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" />
                 </div>
             </div>
@@ -131,7 +131,7 @@ onMounted(() => {
             <button type="submit" :disabled="loading" class="w-full bg-secondary text-white font-headline-md text-body-lg py-3 rounded-lg shadow-lg shadow-secondary/20 transition-all flex items-center justify-center gap-2
                         hover:opacity-90 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
                 <span v-if="!loading" class="flex items-center gap-2">
-                    Add Product
+                    Update Price
                 </span>
 
                 <span v-else class="flex items-center gap-2">

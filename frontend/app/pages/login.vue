@@ -18,7 +18,7 @@ const handleLogin = async () => {
   try {
     await login(email.value, password.value);
 
-    router.push("/");
+    await navigateTo("/");
   } catch (e) {
     error.value = "Invalid credentials";
   } finally {
@@ -26,9 +26,9 @@ const handleLogin = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
     if (isLoggedIn.value) {
-        router.push("/");
+        await navigateTo("/");
     }
 });
 </script>

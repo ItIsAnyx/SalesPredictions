@@ -83,6 +83,7 @@ const fetchGrowth = async () => {
 
   growth.value = growth_res.growth;
 }
+
 watch(currentPage, async (page) => {
   router.replace({
     query: {
@@ -145,7 +146,7 @@ const visiblePages = computed(() => {
         <h3 class="font-bold text-lg text-on-surface">Product Catalog</h3>
 
         <div>
-          <DropoutMenuRegions v-model="selectedRegion" :items="regionOptions" placeholder="Select region" />
+          <DropoutMenuRegions v-model="selectedRegion" :items="regionOptions" placeholder="Select Region" />
         </div>
 
         <div class="flex items-center gap-sm">

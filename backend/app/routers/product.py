@@ -212,12 +212,14 @@ def get_product(
 
 @router.get("/{product_id}/prices")
 def get_prices(product_id: int,
-               region_id: int = 1,
-               range_milisec: int = Query(default=1_000_000_000),
+               region_id: int = Query(default=1),
+               range: int = Query(default=1_000_000_000),
                db: Session = Depends(get_db)
                ):
     today = datetime.utcnow()
-    range_day = today - timedelta(milliseconds=range_milisec)
+    range_day = today - timedelta(milliseconds=range)
+
+    print("RANGE", range_day)
 
     data_query = text("""
     SELECT changed_at, price FROM price_histories
@@ -225,23 +227,42 @@ def get_prices(product_id: int,
     ORDER BY changed_at ASC
     """)
     price_history = db.execute(data_query, {"product_id": product_id, "range_day": range_day, "region_id": region_id}).mappings().all()
-    result = [
-        {
-            "timestamp": item["changed_at"].strftime("%d-%m-%Y %H:%M:%S"),
-            "price": float(item["price"]) if item["price"] else None
-        }
-        for item in price_history
-    ]
 
-    return result
+    print(price_history)
+    current_price = 0
+    trend_value = 0
+
+    if len(price_history) > 0:
+        current_price = float(price_history[-1]["price"] or 0)
+
+    if len(price_history) > 1:
+        first_price = float(price_history[0]["price"] or 0)
+
+        if first_price != 0:
+            trend_value = (
+                (current_price - first_price) / first_price
+            ) * 100    
+
+    return {
+        "current_price": current_price,
+        "trend_value": trend_value,
+        "items": [
+            {
+                "timestamp": item["changed_at"].isoformat(),
+                "price": float(item["price"]) if item["price"] else 0
+            }
+            for item in price_history
+        ]
+    }
+
 
 def get_price_history_for_model(product_id: int,
                                 region_id: int = 1,
-                                range_milisec: int = Query(default=1_000_000_000_000),
+                                range: int = Query(default=1_000_000_000_000),
                                 db: Session = Depends(get_db)
                                 ):
     today = datetime.utcnow()
-    range_day = today - timedelta(milliseconds=range_milisec)
+    range_day = today - timedelta(milliseconds=range)
 
     data_query = text("""
     SELECT changed_at, price, season, weather_condition, weekend FROM price_histories
@@ -256,18 +277,24 @@ def get_price_history_for_model(product_id: int,
 
     return df
 
-@router.get("/{product_id}/prices-prediction")
+@router.get("/{product_id}/price-prediction")
 def get_prices(product_id: int,
                region_id: int = 1,
-               range_milisec: int = Query(default=1_000_000_000_000),
-               predict_days: int = 7,
+               range: int = Query(default=1_000_000_000_000),
                db: Session = Depends(get_db)
                ):
+    predict_days = timedelta(milliseconds=range).days
     try:
-        df = get_price_history_for_model(product_id, region_id, range_milisec, db)
-        result = train_predict_model(df, range_days=predict_days, is_debugging=True)
-        return result
-
+        df = get_price_history_for_model(product_id, region_id, range, db)
+        result = train_predict_model(df, range_days=predict_days, is_debugging=False)
+        return [
+            {
+                "timestamp": date.isoformat(),
+                "price": float(price)
+            }
+            for date, price in zip(result["timestamp"], result["predictions"])
+        ]
 
     except Exception as e:
+        print("ERROR ", str(e))
         raise HTTPException(status_code=400, detail=f"Error when trying to predict prices: {str(e)}")

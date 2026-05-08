@@ -13,7 +13,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: "Select option"
+        default: "Select Region"
     }
 });
 
@@ -22,15 +22,18 @@ const emit = defineEmits(["update:modelValue"]);
 const selected = ref(props.modelValue || null);
 
 const normalizedItems = computed(() => {
+    if (props.modelValue) {
+        return [
+            ...props.items
+        ];
+    }
     return [
         { id: null, title: "All Regions" },
         ...props.items
     ];
 });
 
-watch(
-    () => props.modelValue,
-    (value) => {
+watch(() => props.modelValue, (value) => {
         selected.value = value;
     }
 );
@@ -60,9 +63,9 @@ const getItemKey = (item, index) => {
 </script>
 
 <template>
-    <Menu as="div" class="relative w-full">
+    <Menu as="div" class="relative">
         <MenuButton
-            class="w-full flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 text-left focus:ring-1 focus:ring-secondary outline-none transition-all">
+            class="max-h-10 w-[140px] flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 text-left focus:ring-1 focus:ring-secondary outline-none transition-all">
             <span class="text-slate-700">
                 {{ getItemLabel(selected) || placeholder }}
             </span>
@@ -72,7 +75,7 @@ const getItemKey = (item, index) => {
             enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-75 ease-in"
             leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
             <MenuItems
-                class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg focus:outline-none">
+                class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg focus:outline-none">
                 <div class="py-1">
                     <MenuItem v-for="(item, index) in normalizedItems" :key="getItemKey(item, index)"
                         v-slot="{ active }">

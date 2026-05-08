@@ -68,6 +68,8 @@ onMounted(async () => {
 
   await fetchProducts(currentPage.value);
   await fetchMetaRegions();
+
+  console.log(products)
 });
 
 const fetchMetaRegions = async () => {
@@ -183,6 +185,9 @@ const visiblePages = computed(() => {
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container text-right">
                 Update
+              </th>
+              <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container text-right">
+                Forecast
               </th>
             </tr>
           </thead>

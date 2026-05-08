@@ -17,9 +17,9 @@ cat_boost_model = CatBoostRegressor(
 
 def train_predict_model(df, range_days=7, is_debugging=False, model=cat_boost_model):
     dates = df['changed_at']
-    print("\n\ntrain_predict_model")
-    print(df.head())
-    print(df.tail())
+    # print("\n\ntrain_predict_model")
+    # print(df.head())
+    # print(df.tail())
     x = df[FEATURE_COLUMNS]
     y = df['price']
 
@@ -33,8 +33,8 @@ def train_predict_model(df, range_days=7, is_debugging=False, model=cat_boost_mo
 
         predictions = model.predict(X_test)
         mae = mean_absolute_error(y_test, predictions)
-        print({"timestamp": dates_test.dt.strftime("%d-%m-%Y %H:%M:%S").tolist(), "predictions": predictions.tolist(), "mae": mae})
-        return {"timestamp": dates_test.dt.strftime("%d-%m-%Y %H:%M:%S").tolist(), "predictions": predictions.tolist(), "mae": mae}
+        print({"timestamp": dates_test.dt.tolist(), "predictions": predictions.tolist()})
+        return {"timestamp": dates_test.dt.tolist(), "predictions": predictions.tolist()}
 
     # Для предсказаний будущего
     else:
@@ -43,8 +43,8 @@ def train_predict_model(df, range_days=7, is_debugging=False, model=cat_boost_mo
         x_test = get_future_x(range_days)
         predictions = model.predict(x_test.drop('changed_at', axis=1))
 
-        print({"timestamp": x_test["changed_at"].dt.strftime("%d-%m-%Y %H:%M:%S").tolist(), "predictions": predictions.tolist(), "mae": None})
-        return {"timestamp": x_test["changed_at"].dt.strftime("%d-%m-%Y %H:%M:%S").tolist(), "predictions": predictions.tolist(), "mae": None}
+        print({"timestamp": x_test["changed_at"].tolist(), "predictions": predictions.tolist()})
+        return {"timestamp": x_test["changed_at"].tolist(), "predictions": predictions.tolist()}
 
 def get_future_x(days):
     now = datetime.now()

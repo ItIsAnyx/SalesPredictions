@@ -66,7 +66,7 @@ const barStyle = (i) => {
                 <span class="material-symbols-outlined text-[14px]">
                     {{ isGrowing ? "trending_up" : "trending_down" }}
                 </span>
-                    {{ isGrowing ? "+" : ""}}{{ product.diff_percent?.toFixed(2) || 0 }}%
+                    {{ isGrowing ? "+" : ""}}{{ product.diff_percent?.toFixed(2) || '0.00' }}%
                 </span>
             </div>
         </td>
