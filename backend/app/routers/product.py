@@ -281,9 +281,9 @@ def get_price_history_for_model(product_id: int,
 def get_prices(product_id: int,
                region_id: int = 1,
                range: int = Query(default=1_000_000_000_000),
+               predict_days: int = Query(default=7),
                db: Session = Depends(get_db)
                ):
-    predict_days = timedelta(milliseconds=range).days
     try:
         df = get_price_history_for_model(product_id, region_id, range, db)
         result = train_predict_model(df, range_days=predict_days, is_debugging=False)
