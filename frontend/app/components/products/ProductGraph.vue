@@ -57,7 +57,7 @@ const fetchHistory = async () => {
 
     console.log(history.value)
 
-    emit("update:historyStats", { "current_price": res.current_price, "trend_value": res.trend_value })
+    emit("update:historyStats", { "current_price": res.current_price, "trend_value": res.trend_value });
 };
 
 const fetchPrediction = async () => {
@@ -92,7 +92,7 @@ watch(predictionRange, async () => {
 
 watch(backRange, async () => {
     await fetchHistory();
-    if (predictionRange !== 0) {
+    if (predictionRange.value !== 0) {
         await fetchPrediction();
     }
 })
