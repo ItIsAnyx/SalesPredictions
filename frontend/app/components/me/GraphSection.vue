@@ -1,11 +1,11 @@
 <script setup>
 import PriceChangeGraph from './PriceChangeGraph.vue';
-import PriceGraph from './PriceGraph.vue';
+import PriceChangesByCategoryGraph from './PriceChangesByCategoryGraph.vue';
 </script>
 
 <template>
     <section class="gap-2 flex flex-col pt-lg">
         <PriceChangeGraph />
-        <PriceGraph />
+        <PriceChangesByCategoryGraph />
     </section>
 </template>

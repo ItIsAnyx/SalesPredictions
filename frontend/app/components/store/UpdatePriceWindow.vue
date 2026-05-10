@@ -35,7 +35,7 @@ const handleSubmit = async () => {
         loading.value = true;
 
         const res = await api.request(
-            `/api/products/${props.product.product_id}/price`,
+            `/api/products/${props.product.id}/price`,
             {
                 method: "POST",
                 body: {

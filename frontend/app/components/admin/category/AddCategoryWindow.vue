@@ -6,7 +6,7 @@ const emit = defineEmits(["updated", "close"]);
 
 const api = useApiFetch();
 
-const storeName = ref("");
+const title = ref("");
 
 const loading = ref(false);
 
@@ -15,11 +15,11 @@ const handleSubmit = async () => {
         loading.value = true;
 
         const res = await api.request(
-            `/api/stores`,
+            `/api/categories`,
             {
                 method: "POST",
                 body: {
-                    store_name: storeName.value
+                    title: title.value
                 }
             }
         );
@@ -38,13 +38,13 @@ const handleSubmit = async () => {
 <template>
     <div class="overflow-hidden relative bg-white w-full max-w-[440px] rounded-lg shadow-xl p-lg md:p-xl">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary to-secondary/60" />
-        <h2 class="text-lg font-bold mb-xl">Add Product</h2>
+        <h2 class="text-lg font-bold mb-xl">Add Category</h2>
         <form class="space-y-lg" @submit.prevent="handleSubmit">
             <div class="space-y-sm">
-                <label class="text-slate-600 block" for="product_name">Store Name</label>
+                <label class="text-slate-600 block" for="product_name">Category Name</label>
                 <div class="relative">
-                    <input v-model="storeName" id="product_name" name="product_name" type="text"
-                        placeholder="Stores"
+                    <input v-model="title" id="product_name" name="product_name" type="text"
+                        placeholder="Category"
                         class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 px-4 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" />
                 </div>
             </div>
@@ -52,7 +52,7 @@ const handleSubmit = async () => {
             <button type="submit" :disabled="loading" class="w-full bg-secondary text-white font-headline-md text-body-lg py-3 rounded-lg shadow-lg shadow-secondary/20 transition-all flex items-center justify-center gap-2
                         hover:opacity-90 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
                 <span v-if="!loading" class="flex items-center gap-2">
-                    Add Store
+                    Add Category
                 </span>
 
                 <span v-else class="flex items-center gap-2">

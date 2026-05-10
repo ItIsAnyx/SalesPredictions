@@ -11,6 +11,10 @@ class User(Base):
     login = Column(String(255), unique=True, nullable=False)
     first_name = Column(String(255), nullable=False)
     last_name = Column(String(255), nullable=False)
+    role = Column(
+        Enum("USER", "ADMIN", name="user_roles"),
+        nullable=False, default="USER"
+    )
     password = Column(String(255), nullable=False)
 
     stores = relationship("Store", back_populates="owner")

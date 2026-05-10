@@ -45,7 +45,7 @@ const allData = computed(() => [
 const fetchHistory = async () => {
     const params = new URLSearchParams();
 
-    params.append("range", backRange.value);
+    params.append("range_ms", backRange.value);
 
     if (selectedRegion.value) {
         params.append("region_id", selectedRegion.value.id);
@@ -55,9 +55,8 @@ const fetchHistory = async () => {
 
     history.value = res.items;
 
-    console.log(history.value)
-
     emit("update:historyStats", { "current_price": res.current_price, "trend_value": res.trend_value });
+    emit("update:history", history.value);
 };
 
 const fetchPrediction = async () => {
@@ -77,7 +76,7 @@ const fetchPrediction = async () => {
 
     prediction.value = res;
 
-    emit("update:prediction", res);
+    emit("update:prediction", prediction.value);
 }
 
 onMounted(async () => {
@@ -87,7 +86,6 @@ onMounted(async () => {
 
 watch(predictionRange, async () => {
     await fetchPrediction();
-    console.log(allData.value)
 });
 
 watch(backRange, async () => {

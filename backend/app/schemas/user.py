@@ -8,3 +8,7 @@ class UserDto(BaseModel):
     login: str
     first_name: str
     last_name: str
+    role: str
+
+class ChangeUserRolePayload(BaseModel):
+    role: str

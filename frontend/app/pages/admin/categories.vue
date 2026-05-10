@@ -1,8 +1,9 @@
 <script setup>
 import { useRoute, useRouter } from "vue-router";
 import { ref, watch, onMounted } from "vue";
-import ProductRow from '~/components/products/ProductRow.vue';
 import { useApiFetch } from "@/composables/useApiFetch";
+import CategoryRow from "~/components/admin/category/CategoryRow.vue";
+import AddCategoryWindow from "~/components/admin/category/AddCategoryWindow.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -10,90 +11,49 @@ const router = useRouter();
 const api = useApiFetch();
 
 const currentPage = ref(Number(route.query.page) || 1);
-const selectedRegion = ref(null);
 
-const regionOptions = ref([]);
-
-const products = ref([]);
-const totalProducts = ref();
-const growth = ref();
+const categories = ref([]);
+const totalCategories = ref();
 const totalPages = ref();
 
-watch(selectedRegion, async () => {
-  currentPage.value = 1;
-  router.replace({
-    query: {
-      ...route.query,
-      page: String(currentPage.value),
-      region_id: selectedRegion.value?.id || undefined
-    }
-  });
-  await fetchProducts(currentPage.value);
-  await fetchGrowth();
-});
+const menuAddOpen = ref(false);
+
+const toggleMenu = () => {
+    menuAddOpen.value = !menuAddOpen.value;
+};
 
 onMounted(async () => {
   currentPage.value = Number(route.query.page) || 1;
 
-  if (route.query.region) {
-    selectedRegion.value = {
-      id: Number(route.query.region)
-    };
-  }
-
-  await fetchProducts(currentPage.value);
-  await fetchGrowth();
-  await fetchMetaRegions();
+  await fetchCategories(currentPage.value);
 });
 
-const fetchMetaRegions = async () => {
-  const res = await api.request("/api/meta/regions");
-
-  regionOptions.value = res.regions;
-};
-
-const fetchProducts = async (page = 1) => {
+const fetchCategories = async (page = 1) => {
   const params = new URLSearchParams();
 
   params.append("page", page);
+  try {
+    const res = await api.request(
+      `/api/categories?${params.toString()}`
+    );
 
-  if (selectedRegion.value) {
-    params.append("region_id", selectedRegion.value.id);
+    categories.value = res.items;
+    totalPages.value = res.total_pages;
+    totalCategories.value = res.total_items;
+  } catch (error) {
+    navigateTo("/");
   }
-
-  const res = await api.request(
-    `/api/products?${params.toString()}`
-  );
-
-  products.value = res.items;
-  totalPages.value = res.total_pages;
-  totalProducts.value = res.total_items;
 };
-
-const fetchGrowth = async () => {
-  const params = new URLSearchParams();
-
-  if (selectedRegion.value) {
-    params.append("region_id", selectedRegion.value.id);
-  }
-
-  const growth_res = await api.request(
-    `/api/products/growth?${params.toString()}`
-  )
-
-  growth.value = growth_res.growth;
-}
 
 watch(currentPage, async (page) => {
   router.replace({
     query: {
       ...route.query,
-      page: String(page),
-      region_id: selectedRegion.value?.id || undefined
+      page: String(page)
     }
   });
 
-  await fetchProducts(page);
+  await fetchCategories(page);
 });
 
 const visiblePages = computed(() => {
@@ -115,36 +75,19 @@ const visiblePages = computed(() => {
 
 <template>
   <section class="p-md md:p-lg max-w-[1280px] w-full mx-auto space-y-lg">
-
-    <div class="bg-white border border-surface-container p-md rounded-lg flex flex-col justify-between w-full">
-      <span class="text-outline text-[11px] font-bold uppercase">Total Products</span>
-      <div class="flex items-baseline gap-sm mt-sm">
-        <span class="text-2xl font-bold text-on-surface">{{ totalProducts }}</span>
-        <span class="text-xs font-bold"
-          :class="growth > 0 ? 'text-secondary' : 'text-error'"
-        >
-          {{ growth > 0 ? '+' : '' }}{{growth}}
-      </span>
-      </div>
-    </div>
-
     <!-- Table -->
     <div class="bg-white border border-surface-container rounded-lg shadow-sm">
 
       <!-- Controls -->
       <div class="px-md py-md border-b border-surface-container-low flex items-center justify-between">
-        <h3 class="font-bold text-lg text-on-surface">Product Catalog</h3>
-
-        <div>
-          <DropoutMenuRegions v-model="selectedRegion" :items="regionOptions" placeholder="Select Region" />
-        </div>
-
-        <div class="flex items-center gap-sm">
-          <button class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg flex items-center gap-sm hover:opacity-90">
-            <span class="material-symbols-outlined text-sm">download</span>
-            Export CSV
-          </button>
-        </div>
+        <h3 class="font-bold text-lg text-on-surface">Category Control</h3>
+        <div class="flex">
+                <button @click="toggleMenu"
+                    class="flex items-center gap-xs px-md py-sm bg-secondary text-white text-sm font-semibold rounded-lg hover:opacity-90">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    Add New Category
+                </button>
+            </div>
       </div>
 
       <!-- Table -->
@@ -154,34 +97,32 @@ const visiblePages = computed(() => {
           <thead>
             <tr class="bg-surface-container-low">
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                Product Name
+                ID
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                Store Name
+                Name
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                Current Price
-              </th>
-              <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container">
-                7-Day Forecast Trend
+                Rename
               </th>
               <th class="px-md py-sm text-[11px] uppercase text-outline border-b border-surface-container text-right">
-                See forecast
+                Delete
               </th>
             </tr>
           </thead>
 
           <tbody class="divide-y divide-surface-container-low">
-            <ProductRow v-for="product in products"
-              :key="product.product_sku"
-              :product="product"
+            <CategoryRow v-for="c in categories"
+              :key="c.id"
+              :category="c"
+              @update-categories="fetchCategories"
               />
           </tbody>
         </table>
       </div>
 
       <div class="px-md py-sm border-t border-surface-container flex items-center justify-between text-outline text-[11px] font-bold uppercase">
-        <p>Showing {{ currentPage === 1 ? currentPage : (currentPage - 1) * 20 }} to {{ currentPage * 20 - 1 > totalProducts ? totalProducts : currentPage * 20 - 1 }} of {{ totalProducts }} products</p>
+        <p>Showing {{ currentPage === 1 ? currentPage : (currentPage - 1) * 20 }} to {{ currentPage * 20 - 1 > totalCategories ? totalCategories : currentPage * 20 - 1 }} of {{ totalCategories }} categories</p>
 
         <div class="flex items-center gap-xs">
           <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low"
@@ -202,7 +143,7 @@ const visiblePages = computed(() => {
 
           <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low"
             @click="currentPage++"
-            :disabled="currentPage * 20 - 1 > totalProducts"
+            :disabled="currentPage * 20 - 1 > totalCategories"
           >
             <span class="material-symbols-outlined text-[18px]">chevron_right</span>
           </button>
@@ -211,8 +152,9 @@ const visiblePages = computed(() => {
 
     </div>
   </section>
-
-  <div>
-
-  </div>
+  <div v-if="menuAddOpen" @click="toggleMenu" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div @click.stop>
+            <AddCategoryWindow @close="toggleMenu" @updated="fetchCategories(currentPage)"/>
+        </div>
+    </div>
 </template>

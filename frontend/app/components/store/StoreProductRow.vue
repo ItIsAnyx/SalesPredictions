@@ -52,7 +52,7 @@ const timeAgo = (dateString) => {
             <div class="flex items-center gap-md">
                 <div>
                     <p class="font-bold text-on-surface text-sm">{{ product.title }}</p>
-                    <p class="text-[11px] text-outline">SKU: {{ product.product_id }}</p>
+                    <p class="text-[11px] text-outline">SKU: {{ product.id }}</p>
                 </div>
             </div>
         </td>
@@ -88,7 +88,7 @@ const timeAgo = (dateString) => {
         </td>
         <td class="px-md py-md flex justify-end">
             <NuxtLink class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg hover:opacity-90"
-                :to="'/products/' + product.product_id">
+                :to="'/products/' + product.id">
                 Forecast
         </NuxtLink>
         </td>

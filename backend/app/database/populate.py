@@ -49,7 +49,8 @@ def create_default_user(session):
         login="test",
         first_name="Test",
         last_name="User",
-        password=hash_password("123123123")
+        password=hash_password("123123123"),
+        role="ADMIN"
     )
     session.add(user)
     session.flush()

@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.auth.service import get_current_user
 from app.database.db import get_db
 from sqlalchemy.orm import Session
 from app.database.models import Product, PriceHistory, Store
 from app.schemas.product import ProductPriceUpdateDto, ProductCreateDto, ProductInfoDto
 from sqlalchemy import text
-from math import ceil
 from datetime import datetime, timedelta
 import pandas as pd
 from app.ml_models.ml_models import train_predict_model
@@ -94,89 +93,34 @@ def get_products(
     region_id: int | None = Query(default=None),
     db: Session = Depends(get_db)
 ):
-    offset = (page - 1) * limit
+    try:
+        result = db.execute(
+            text("""
+                SELECT get_product_for_products_page(
+                    :page,
+                    :limit,
+                    :region_id
+                )
+            """),
+            {
+                "page": page,
+                "limit": limit,
+                "region_id": region_id
+            }
+        ).scalar()
 
-    data_query = text("""
-    WITH ranked_prices AS (
-        SELECT
-            p.id AS product_id,
-            p.title,
-            s.title as store_title,
-            ph.region_id,
-            ph.price,
-            ROW_NUMBER() OVER (
-                PARTITION BY p.id, ph.region_id
-                ORDER BY ph.changed_at DESC NULLS LAST
-            ) AS rn
-        FROM products p
-        LEFT JOIN price_histories ph ON ph.product_id = p.id
-        LEFT JOIN stores s ON p.store_id = s.id
-        WHERE :region_id IS NULL OR ph.region_id = :region_id OR ph.region_id IS NULL
-    ),
+        if not result:
+            raise HTTPException(500, "EMPTY_RESPONSE")
 
-    last_two AS (
-        SELECT *
-        FROM ranked_prices
-        WHERE rn <= 2
-    ),
+        if not result["success"]:
+            raise HTTPException(400, result.get("error", "UNKNOWN_ERROR"))
+        return result
+    
+    except HTTPException:
+        raise
 
-    per_region AS (
-        SELECT
-            product_id,
-            title,
-            store_title,
-            MAX(CASE WHEN rn = 1 THEN price END) AS last_price,
-            MAX(CASE WHEN rn = 2 THEN price END) AS prev_price
-        FROM last_two
-        GROUP BY product_id, title, store_title
-    ),
-
-    product_metrics AS (
-        SELECT
-            product_id,
-            title,
-            store_title,
-            AVG(last_price) AS avg_last_price,
-            (AVG(last_price) - AVG(prev_price)) / NULLIF(AVG(prev_price), 0) * 100 AS diff_percent
-        FROM per_region
-        GROUP BY product_id, title, store_title
-    )
-
-    SELECT *
-    FROM product_metrics
-    LIMIT :limit OFFSET :offset
-    """)
-
-    items = db.execute(data_query, {
-        "region_id": region_id,
-        "limit": limit,
-        "offset": offset
-    }).mappings().all()
-
-    count_query = text("""
-    WITH prices AS (
-        SELECT
-            p.id AS product_id
-        FROM products p
-        LEFT JOIN price_histories ph ON ph.product_id = p.id
-        WHERE :region_id IS NULL OR ph.region_id = :region_id
-    )
-    SELECT COUNT(DISTINCT product_id)
-    FROM prices
-    """)
-
-    total_items = db.execute(count_query, {
-        "region_id": region_id
-    }).scalar()
-
-    total_pages = ceil(total_items / limit) if total_items else 1
-
-    return {
-        "total_items": total_items,
-        "page": page,
-        "total_pages": total_pages,
-        "items": items
-    }
+    except Exception as e:
+         raise HTTPException(500, "FAILED_TO_FETCH_STORE_PRODUCTS")
 
 @router.get("/growth")
 def get_products_growth(
@@ -211,49 +155,42 @@ def get_product(
     )
 
 @router.get("/{product_id}/prices")
-def get_prices(product_id: int,
-               region_id: int = Query(default=1),
-               range: int = Query(default=1_000_000_000),
-               db: Session = Depends(get_db)
-               ):
-    today = datetime.utcnow()
-    range_day = today - timedelta(milliseconds=range)
+def get_prices(
+    product_id: int,
+    region_id: int = Query(default=1),
+    range_ms: int = Query(default=1_000_000_000),
+    db: Session = Depends(get_db)
+):
+    try:
 
-    print("RANGE", range_day)
-
-    data_query = text("""
-    SELECT changed_at, price FROM price_histories
-    WHERE product_id = :product_id AND changed_at >= :range_day AND region_id = :region_id
-    ORDER BY changed_at ASC
-    """)
-    price_history = db.execute(data_query, {"product_id": product_id, "range_day": range_day, "region_id": region_id}).mappings().all()
-
-    print(price_history)
-    current_price = 0
-    trend_value = 0
-
-    if len(price_history) > 0:
-        current_price = float(price_history[-1]["price"] or 0)
-
-    if len(price_history) > 1:
-        first_price = float(price_history[0]["price"] or 0)
-
-        if first_price != 0:
-            trend_value = (
-                (current_price - first_price) / first_price
-            ) * 100    
-
-    return {
-        "current_price": current_price,
-        "trend_value": trend_value,
-        "items": [
+        result = db.execute(
+            text("""
+                SELECT get_product_prices(
+                    :product_id,
+                    :region_id,
+                    :range_ms
+                )
+            """),
             {
-                "timestamp": item["changed_at"].isoformat(),
-                "price": float(item["price"]) if item["price"] else 0
+                "product_id": product_id,
+                "region_id": region_id,
+                "range_ms": range_ms
             }
-            for item in price_history
-        ]
-    }
+        ).scalar()
+
+        if not result:
+            raise HTTPException(500, "EMPTY_RESPONSE")
+
+        if not result["success"]:
+            raise HTTPException(400, result.get("error", "UNKNOWN_ERROR"))
+        
+        return result
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+                 raise HTTPException(500, "FAILED_TO_FETCH_STORE_PRODUCTS")
 
 
 def get_price_history_for_model(product_id: int,

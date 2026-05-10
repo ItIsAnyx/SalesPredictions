@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database.db import get_db
@@ -200,12 +200,7 @@ def avg_price_change_range(
             SELECT
                 EXTRACT(
                     EPOCH FROM (
-                        ph.changed_at -
-                        LAG(ph.changed_at)
-                        OVER (
-                            PARTITION BY ph.product_id
-                            ORDER BY ph.changed_at
-                        )
+                        ph.changed_at - LAG(ph.changed_at) OVER (PARTITION BY ph.product_id ORDER BY ph.changed_at)
                     )
                 ) / 86400 AS diff_days
             FROM price_histories ph
@@ -226,3 +221,41 @@ def avg_price_change_range(
             "value": float(result) if result else 0
         }
     }
+
+@router.get("/price-changes-timeline")
+def price_changes_timeline(
+    range_ms: int = Query(default=1000000000),
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    
+    print(user.id)
+    query = text("""
+        SELECT get_price_changes_timeline(:user_id, :range_ms) AS result
+    """)
+
+    result = db.execute(
+        query,
+        {
+            "user_id": user.id,
+            "range_ms": range_ms
+        }
+    ).scalar()
+
+    return result.get("data", list())
+
+@router.get("/price-changes-by-category")
+def price_changes_by_category(
+    db: Session = Depends(get_db),
+    user = Depends(get_current_user)
+):
+    result = db.execute(
+        text("""
+            SELECT get_price_changes_by_category(:user_id)
+        """),
+        {
+            "user_id": user.id
+        }
+    ).scalar()
+
+    return result.get("data", list())

@@ -33,7 +33,7 @@ const barStyle = (i) => {
             <div class="flex items-center gap-md">
                 <div>
                     <p class="font-bold text-on-surface text-sm">{{ product.title }}</p>
-                <p class="text-[11px] text-outline">SKU: {{ product.product_id }}</p>
+                <p class="text-[11px] text-outline">SKU: {{ product.id }}</p>
                 </div>
             </div>
         </td>
@@ -72,7 +72,7 @@ const barStyle = (i) => {
         </td>
 
         <td class="px-md py-md flex justify-end">
-            <NuxtLink class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg gap-sm hover:opacity-90" :to="'products/' + product.product_id">
+            <NuxtLink class="px-md py-sm bg-secondary text-white text-sm font-bold rounded-lg gap-sm hover:opacity-90" :to="'products/' + product.id">
                 Forecast
             </NuxtLink>
         </td>

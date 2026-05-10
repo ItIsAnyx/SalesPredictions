@@ -57,95 +57,34 @@ def get_products(
 
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
+    
+    try:
+        result = db.execute(
+            text("""
+                SELECT get_products_for_stores_page(
+                    :store_id,
+                    :region_id,
+                    :page,
+                    :limit
+                )
+            """),
+            {
+                "store_id": store_id,
+                "region_id": region_id,
+                "page": page,
+                "limit": limit
+            }
+        ).scalar()
 
-    offset = (page - 1) * limit
+        if not result:
+            raise HTTPException(500, "EMPTY_RESPONSE")
 
-    data_query = text("""
-    WITH ranked_prices AS (
-        SELECT
-            p.id AS product_id,
-            p.title,
-            ph.region_id,
-            ph.price,
-            ph.changed_at,
-            ROW_NUMBER() OVER (
-                PARTITION BY p.id, ph.region_id
-                ORDER BY ph.changed_at DESC NULLS LAST
-            ) AS rn
-        FROM products p
-        LEFT JOIN price_histories ph ON ph.product_id = p.id
-        WHERE p.store_id = :store_id
-        AND (:region_id IS NULL OR ph.region_id = :region_id OR ph.region_id IS NULL)
-    ),
+        if not result.get("success"):
+            raise HTTPException(400, result.get("error", "UNKNOWN_ERROR"))
+        return result
 
-    last_two AS (
-        SELECT *
-        FROM ranked_prices
-        WHERE rn <= 2
-    ),
-
-    per_region AS (
-        SELECT
-            product_id,
-            region_id,
-            title,
-            MAX(CASE WHEN rn = 1 THEN price END) AS last_price,
-            MAX(CASE WHEN rn = 2 THEN price END) AS prev_price,
-            MAX(CASE WHEN rn = 1 THEN changed_at END) AS last_change_time
-        FROM last_two
-        GROUP BY product_id, region_id, title
-    ),
-
-    product_metrics AS (
-        SELECT
-            product_id,
-            title,
-            AVG(last_price) AS avg_last_price,
-            (AVG(last_price) - AVG(prev_price)) / NULLIF(AVG(prev_price), 0) * 100 AS diff_percent,
-            MAX(last_change_time) AS last_change
-        FROM per_region
-        GROUP BY product_id, title
-    )
-
-    SELECT *
-    FROM product_metrics
-    ORDER BY last_change DESC
-    LIMIT :limit OFFSET :offset
-    """)
-
-    items = db.execute(data_query, {
-        "store_id": store_id,
-        "region_id": region_id,
-        "limit": limit,
-        "offset": offset
-    }).mappings().all()
-
-    count_query = text("""
-        WITH prices AS (
-            SELECT
-                p.id AS product_id
-            FROM products p
-            LEFT JOIN price_histories ph ON ph.product_id = p.id
-            WHERE (:region_id IS NULL OR ph.region_id = :region_id)
-                AND p.store_id = :store_id
-        )
-        SELECT COUNT(DISTINCT product_id)
-        FROM prices
-        """)
-
-    total_items = db.execute(count_query, {
-        "store_id": store_id,
-        "region_id": region_id
-    }).scalar()
-
-    total_pages = ceil(total_items / limit) if total_items else 1
-
-    return {
-        "total_items": total_items,
-        "page": page,
-        "total_pages": total_pages,
-        "items": items
-    }
+    except Exception as e:
+        raise HTTPException(500, "FAILED_TO_FETCH_STORE_PRODUCTS")
 
 @router.post("")
 def create_store(

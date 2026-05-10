@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.db import get_db
-from app.database.models import PriceHistory, Region, Category
+from app.database.models import PriceHistory, Region, Category, User
 
 router = APIRouter()
 
@@ -22,6 +22,12 @@ def get_product_options(db: Session = Depends(get_db)):
 def get_regions(db: Session = Depends(get_db)):
     return {
         "regions": db.query(Region).all()
+    }
+
+@router.get("/meta/roles")
+def get_regions():
+    return {
+        "roles": User.__table__.columns["role"].type.enums
     }
 
 def get_season_weather_region(db: Session):

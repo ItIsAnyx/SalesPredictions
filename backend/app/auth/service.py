@@ -70,3 +70,14 @@ def get_current_user(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
     return user
+
+def get_admin_current_user(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    user = get_current_user(request, db)
+
+    if (user.role != "ADMIN"):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Invalid Role for Request")
+    
+    return user
