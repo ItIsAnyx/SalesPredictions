@@ -13,6 +13,10 @@ const toggleAdminMenu = () => {
   adminMenuOpen.value = !adminMenuOpen.value;
 };
 
+onMounted(() => {
+  adminMenuOpen.value = false;
+})
+
 const emit = defineEmits(['close'])
 </script>
 

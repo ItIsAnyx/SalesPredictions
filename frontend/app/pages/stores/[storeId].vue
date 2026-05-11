@@ -149,7 +149,7 @@ const visiblePages = computed(() => {
     </div>
 
     <!-- TABLE -->
-    <div class="bg-white border border-surface-container rounded-lg overflow-hidden shadow-sm">
+    <div class="bg-white border border-surface-container rounded-lg shadow-sm">
 
       <div class="px-md py-md border-b border-surface-container-low flex items-center justify-between">
         <h3 class="font-bold text-lg text-on-surface">
@@ -193,7 +193,7 @@ const visiblePages = computed(() => {
           </thead>
 
           <tbody class="divide-y divide-surface-container-low">
-            <StoreProductRow v-for="product in products" :key="product.product_id" :product="product"
+            <StoreProductRow v-for="product in products" :key="product.product_id" :product="product" :region="selectedRegion"
               @update-price="openUpdatePrice" />
           </tbody>
         </table>
@@ -233,7 +233,7 @@ const visiblePages = computed(() => {
   <div v-if="menuUpdateOpen" @click="closeModal"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
     <div @click.stop>
-      <UpdatePriceWindow :product="selectedUpdateProduct" @close="toggleUpdateMenu"
+      <UpdatePriceWindow :product="selectedUpdateProduct" :region="selectedRegion" @close="toggleUpdateMenu"
         @updated="fetchProducts(currentPage)" />
     </div>
   </div>

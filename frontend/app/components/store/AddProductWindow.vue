@@ -10,7 +10,6 @@ const emits = defineEmits(["close", "updated"]);
 
 const api = useApiFetch();
 
-const seasonOptions = ref([]);
 const weatherConditionOptions = ref([]);
 const regionOptions = ref([]);
 const categoryOptions = ref([]);
@@ -19,9 +18,7 @@ const selectedProductName = ref("");
 const selectedCategory = ref(null);
 const selectedPrice = ref(0);
 const selectedRegion = ref(null);
-const selectedSeason = ref(null);
 const selectedWeatherCondition = ref(null);
-const selectedIsWeekend = ref(false);
 
 const setInitialPrice = ref(false);
 
@@ -30,11 +27,11 @@ const toggleSetInitialPrice = () => {
 };
 
 const loading = ref(false);
+const errorMessage = ref(null);
 
 const fetchMetaOptions = async () => {
     const res = await api.request("/api/meta/create-product-options");
 
-    seasonOptions.value = res.seasons;
     weatherConditionOptions.value = res.weather_conditions;
     regionOptions.value = res.regions;
     categoryOptions.value = res.categories;
@@ -43,9 +40,7 @@ const fetchMetaOptions = async () => {
 const handleSubmit = async () => {
     try {
         loading.value = true;
-
-        console.log(selectedCategory.value);
-        console.log(selectedProductName.value)
+        errorMessage.value = null;
 
         const body = {
             title: selectedProductName.value,
@@ -56,9 +51,7 @@ const handleSubmit = async () => {
         if (setInitialPrice.value) {
             body.price = Number(selectedPrice.value);
             body.region_id = selectedRegion.value.id;
-            body.season = selectedSeason.value;
             body.weather_condition = selectedWeatherCondition.value;
-            body.weekend = selectedIsWeekend.value;
         }
 
         console.log(body);
@@ -71,7 +64,10 @@ const handleSubmit = async () => {
         emits("updated", res);
         emits("close");
     } catch (e) {
-        console.error("Failed to update price:", e);
+        errorMessage.value =
+            e?.data?.detail ||
+            e?.message ||
+            "Something went wrong";
     } finally {
         loading.value = false;
     }
@@ -100,11 +96,8 @@ onMounted(() => {
                         Category
                     </label>
 
-                    <DropoutMenuWindow
-                        v-model="selectedCategory"
-                        :items="categoryOptions"
-                        placeholder="Select category"
-                    />
+                    <DropoutMenuWindow v-model="selectedCategory" :items="categoryOptions"
+                        placeholder="Select category" />
                 </div>
             </div>
 
@@ -130,7 +123,8 @@ onMounted(() => {
                                 class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center h-5 w-5 text-slate-400 group-focus-within:text-secondary transition-colors">
                                 ₽
                             </span>
-                            <input v-model="price" id="price" name="price" type="number" step="0.01" placeholder="0.00"
+                            <input v-model="selectedPrice" id="price" name="price" type="number" step="0.01"
+                                placeholder="0.00"
                                 class="w-full bg-slate-50 border border-slate-200 text-on-surface rounded-lg py-3 pl-10 pr-10 focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none placeholder:text-slate-400" />
                         </div>
                     </div>
@@ -140,23 +134,8 @@ onMounted(() => {
                             Region
                         </label>
 
-                        <DropoutMenuWindow
-                            v-model="selectedRegion"
-                            :items="regionOptions"
-                            placeholder="Select region"
-                        />
-                    </div>
-
-                    <div class="space-y-sm">
-                        <label class="text-slate-600 block">
-                            Season Condition
-                        </label>
-
-                        <DropoutMenuWindow
-                            v-model="selectedSeason"
-                            :items="seasonOptions"
-                            placeholder="Select season"
-                        />
+                        <DropoutMenuWindow v-model="selectedRegion" :items="regionOptions"
+                            placeholder="Select region" />
                     </div>
 
                     <div class="space-y-sm">
@@ -164,25 +143,9 @@ onMounted(() => {
                             Weather Condition
                         </label>
 
-                        <DropoutMenuWindow
-                            v-model="selectedWeatherCondition"
-                            :items="weatherConditionOptions"
-                            placeholder="Select weather"
-                        />
+                        <DropoutMenuWindow v-model="selectedWeatherCondition" :items="weatherConditionOptions"
+                            placeholder="Select weather" />
                     </div>
-                </div>
-
-                <div class="space-y-sm flex items-center justify-between">
-                    <label class="text-slate-600 block">Weekend</label>
-                    <button type="button" @click="selectedIsWeekend = !selectedIsWeekend" :class="[
-                        'w-12 h-6 rounded-full transition',
-                        selectedIsWeekend ? 'bg-secondary' : 'bg-slate-200'
-                    ]">
-                        <div :class="[
-                            'w-5 h-5 bg-white rounded-full shadow transform transition',
-                            selectedIsWeekend ? 'translate-x-6' : 'translate-x-1'
-                        ]" />
-                    </button>
                 </div>
             </div>
 
@@ -200,6 +163,9 @@ onMounted(() => {
                     Loading...
                 </span>
             </button>
+            <p v-if="errorMessage" class="text-red-500 text-sm mt-2">
+                {{ errorMessage }}
+            </p>
         </form>
     </div>
 </template>

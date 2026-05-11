@@ -9,6 +9,7 @@ const api = useApiFetch();
 const storeName = ref("");
 
 const loading = ref(false);
+const errorMessage = ref(null);
 
 const handleSubmit = async () => {
     try {
@@ -28,7 +29,10 @@ const handleSubmit = async () => {
         emit("close");
 
     } catch (e) {
-        console.error("Failed to update price:", e);
+        errorMessage.value =
+            e?.data?.detail ||
+            e?.message ||
+            "Something went wrong";
     } finally {
         loading.value = false;
     }
@@ -63,6 +67,9 @@ const handleSubmit = async () => {
                     Loading...
                 </span>
             </button>
+            <p v-if="errorMessage" class="text-red-500 text-sm mt-2">
+                {{ errorMessage }}
+            </p>
         </form>
     </div>
 </template>

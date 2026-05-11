@@ -32,7 +32,7 @@ class Store(Base):
 class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
-    title = Column(String(64), nullable=False)
+    title = Column(String(64), nullable=False, unique=True)
 
     products = relationship("Product", back_populates="category")
 

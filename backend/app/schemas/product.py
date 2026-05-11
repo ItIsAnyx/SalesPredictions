@@ -1,13 +1,11 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from typing import Optional
 
 
 class ProductPriceUpdateDto(BaseModel):
-    price: int
+    price: float
     region_id: int
-    season: str
     weather_condition: str
-    weekend: bool
 
 class ProductCreateDto(BaseModel):
     title: str
@@ -16,9 +14,7 @@ class ProductCreateDto(BaseModel):
 
     price: Optional[float] = None
     region_id: Optional[int] = None
-    season: Optional[str] = None
     weather_condition: Optional[str] = None
-    weekend: Optional[bool] = None
 
 class ProductInfoDto(BaseModel):
     id: int

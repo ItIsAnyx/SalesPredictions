@@ -120,25 +120,28 @@ def delete_category(
     db: Session = Depends(get_db),
     admin = Depends(get_admin_current_user)
 ):
-    result = db.execute(
-        text("""
-            DELETE FROM categories
-            WHERE id = :category_id
-            RETURNING id
-        """),
-        {
-            "category_id": category_id
+    try:
+        result = db.execute(
+            text("""
+                DELETE FROM categories
+                WHERE id = :category_id
+                RETURNING id
+            """),
+            {
+                "category_id": category_id
+            }
+        ).scalar()
+        
+        db.commit()
+
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="CATEGORY_NOT_FOUND"
+            )
+
+        return {
+            "success": True
         }
-    ).scalar()
-
-    db.commit()
-
-    if not result:
-        raise HTTPException(
-            status_code=404,
-            detail="CATEGORY_NOT_FOUND"
-        )
-
-    return {
-        "success": True
-    }
+    except Exception as e:
+        print("ERROR:", str(e))

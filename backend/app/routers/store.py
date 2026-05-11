@@ -92,6 +92,19 @@ def create_store(
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
+    existing_store = (
+        db.query(Store).filter(
+            Store.title == body.store_name,
+            Store.user_id == user.id
+        ).first()
+    )
+
+    if existing_store:
+        raise HTTPException(
+            status_code=400,
+            detail="STORE_ALREADY_EXISTS"
+        )
+
     store = Store(
         title=body.store_name,
         user_id=user.id

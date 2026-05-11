@@ -8,6 +8,8 @@ from sqlalchemy import text
 from datetime import datetime, timedelta
 import pandas as pd
 from app.ml_models.ml_models import train_predict_model
+from sqlalchemy.exc import IntegrityError, DataError
+from sqlalchemy.exc import DBAPIError
 
 router = APIRouter()
 
@@ -31,19 +33,39 @@ def update_price(
     if not product:
         raise HTTPException(403, "Can't update product or product not found")
 
-    history = PriceHistory(
-        product_id=product_id,
-        price=body.price,
-        region_id=body.region_id,
-        season=body.season,
-        weather_condition=body.weather_condition,
-        weekend=body.weekend
-    )
+    try: 
+        history = PriceHistory(
+            product_id=product_id,
+            price=body.price,
+            region_id=body.region_id,
+            weather_condition=body.weather_condition
+        )
 
-    db.add(history)
-    db.commit()
+        db.add(history)
+        db.commit()
 
-    return {"status": "ok"}
+        return {"status": "ok"}
+    except DataError as e:
+        db.rollback()
+
+        error = str(e.orig)
+
+        if "PRICE_NOT_CHANGED" in error:
+            raise HTTPException(
+                status_code=400,
+                detail="PRICE_NOT_CHANGED"
+            )
+
+        if "PRICE_MUST_BE_POSITIVE" in error:
+            raise HTTPException(
+                status_code=400,
+                detail="PRICE_MUST_BE_POSITIVE"
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="DATABASE_ERROR"
+        )
 
 @router.post("")
 def create_product(
@@ -51,40 +73,57 @@ def create_product(
     db: Session = Depends(get_db),
     user = Depends(get_current_user)
 ):
-    store = db.query(Store).filter(
-        Store.id == body.store_id,
-        Store.user_id == user.id
-    ).first()
+    try:
+        store = db.query(Store).filter(
+            Store.id == body.store_id,
+            Store.user_id == user.id
+        ).first()
 
-    if not store:
-        raise HTTPException(403, "Can't add product to this store")
+        if not store:
+            raise HTTPException(403, "Can't add product to this store")
 
-    product = Product(
-        title=body.title,
-        store_id=body.store_id,
-        category_id=body.category_id
-    )
-
-    db.add(product)
-    db.flush()
-
-    
-    if body.price is not None:
-        if not all([body.region_id, body.season, body.weather_condition]):
-            raise HTTPException(400, "Missing price metadata")
-        
-        history = PriceHistory(
-            product_id=product.id,
-            price=body.price,
-            region_id=body.region_id,
-            season=body.season,
-            weather_condition=body.weather_condition,
-            weekend=body.weekend
+        product = Product(
+            title=body.title,
+            store_id=body.store_id,
+            category_id=body.category_id
         )
-        db.add(history)
 
-    db.commit()
-    return product
+        db.add(product)
+        db.flush()
+
+        if body.price is not None:
+            if not all([body.region_id, body.weather_condition]):
+                raise HTTPException(400, "Missing price metadata")
+            
+            history = PriceHistory(
+                product_id=product.id,
+                price=body.price,
+                region_id=body.region_id,
+                weather_condition=body.weather_condition
+            )
+            db.add(history)
+
+        db.commit()
+        return product
+    except HTTPException:
+            db.rollback()
+            raise
+
+    except (DataError) as e:
+        db.rollback()
+
+        error_text = str(e.orig)
+
+        if "PRICE_MUST_BE_POSITIVE" in error_text:
+            raise HTTPException(
+                status_code=400,
+                detail="PRICE_MUST_BE_POSITIVE"
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="INTERNAL_SERVER_ERROR"
+        )
 
 @router.get("")
 def get_products(

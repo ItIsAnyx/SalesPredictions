@@ -3,29 +3,27 @@ import { onMounted } from 'vue';
 import { useApiFetch } from '@/composables/useApiFetch';
 
 const props = defineProps({
-    product: Object
+    product: Object,
+    region: Object
 });
 
 const emit = defineEmits(["updated", "close"]);
 
 const api = useApiFetch();
 
-const seasonOptions = ref([])
 const weatherConditionOptions = ref([])
 const regionOptions = ref([])
 
 const selectedPrice = ref(props.product?.avg_last_price || 0);
-const selectedRegion = ref(null);
-const selectedSeason = ref(null);
+const selectedRegion = ref(props.region?.title || null);
 const selectedWeatherCondition = ref(null);
-const selectedIsWeekend = ref(false);
 
 const loading = ref(false);
+const errorMessage = ref(null);
 
 const fetchMetaOptions = async () => {
     const res = await api.request("/api/meta/price-history-options");
 
-    seasonOptions.value = res.seasons;
     weatherConditionOptions.value = res.weather_conditions;
     regionOptions.value = res.regions;
 }
@@ -41,9 +39,7 @@ const handleSubmit = async () => {
                 body: {
                     price: Number(selectedPrice.value),
                     region_id: selectedRegion.value.id,
-                    season: selectedSeason.value,
-                    weather_condition: selectedWeatherCondition.value,
-                    weekend: selectedIsWeekend.value
+                    weather_condition: selectedWeatherCondition.value
                 }
             }
         );
@@ -52,7 +48,10 @@ const handleSubmit = async () => {
         emit("close");
 
     } catch (e) {
-        console.error("Failed to update price:", e);
+        errorMessage.value =
+            e?.data?.detail ||
+            e?.message ||
+            "Something went wrong";
     } finally {
         loading.value = false;
     }
@@ -93,18 +92,6 @@ onMounted(() => {
 
             <div class="space-y-sm">
                 <label class="text-slate-600 block">
-                    Season Condition
-                </label>
-
-                <DropoutMenuWindow
-                    v-model="selectedSeason"
-                    :items="seasonOptions"
-                    placeholder="Select season"
-                />
-            </div>
-
-            <div class="space-y-sm">
-                <label class="text-slate-600 block">
                     Weather Condition
                 </label>
 
@@ -113,19 +100,6 @@ onMounted(() => {
                     :items="weatherConditionOptions"
                     placeholder="Select weather"
                 />
-            </div>
-
-            <div class="flex items-center justify-between">
-                <span class="text-slate-600">Weekend</span>
-                <button type="button" @click="selectedIsWeekend = !selectedIsWeekend" :class="[
-                    'w-12 h-6 rounded-full transition',
-                    selectedIsWeekend ? 'bg-secondary' : 'bg-slate-200'
-                ]">
-                    <div :class="[
-                        'w-5 h-5 bg-white rounded-full shadow transform transition',
-                        selectedIsWeekend ? 'translate-x-6' : 'translate-x-1'
-                    ]" />
-                </button>
             </div>
 
             <button type="submit" :disabled="loading" class="w-full bg-secondary text-white font-headline-md text-body-lg py-3 rounded-lg shadow-lg shadow-secondary/20 transition-all flex items-center justify-center gap-2
@@ -142,6 +116,9 @@ onMounted(() => {
                     Loading...
                 </span>
             </button>
+            <p v-if="errorMessage" class="text-red-500 text-sm mt-2">
+                {{ errorMessage }}
+            </p>
         </form>
     </div>
 </template>
