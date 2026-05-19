@@ -6,7 +6,12 @@ const props = defineProps({
     productId: Number
 })
 
-const emit = defineEmits(["update:prediction", "update:historyStats", "update:predictionStats"]);
+const emit = defineEmits([
+    "update:prediction", 
+    "update:historyStats", 
+    "update:predictionStats",
+    "open:subscription"
+]);
 
 const api = useApiFetch();
 
@@ -60,24 +65,41 @@ const fetchHistory = async () => {
 };
 
 const fetchPrediction = async () => {
-    if (predictionRange.value === 0) {
-        return;
+    if (predictionRange.value === 0) return;
+
+    try {
+        const params = new URLSearchParams();
+
+        params.append("range", predictionRange.value);
+
+        if (selectedRegion.value) {
+            params.append("region_id", selectedRegion.value.id);
+        }
+
+        const res = await api.request(
+            `/api/products/${props.productId}/price-prediction?${params.toString()}`
+        );
+
+        prediction.value = res;
+
+        emit("update:prediction", prediction.value);
+
+    } catch (e) {
+        const isSubscriptionError =
+            e?.status === 403 ||
+            e?.response?.status === 403 ||
+            e?.data?.detail === "Subscription required";
+
+        if (isSubscriptionError) {
+            prediction.value = [];
+            emit("open:subscription");
+            return;
+        }
+
+        console.error("Prediction error:", e);
+        
     }
-
-    const params = new URLSearchParams();
-
-    params.append("range", predictionRange.value);
-
-    if (selectedRegion.value) {
-        params.append("region_id", selectedRegion.value.id);
-    }
-
-    const res = await api.request(`/api/products/${props.productId}/price-prediction?${params.toString()}`);
-
-    prediction.value = res;
-
-    emit("update:prediction", prediction.value);
-}
+};
 
 onMounted(async () => {
     await fetchMetaRegions();

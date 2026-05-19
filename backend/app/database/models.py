@@ -76,7 +76,6 @@ class PriceHistory(Base):
     product = relationship("Product", back_populates="price_histories")
     region = relationship("Region", back_populates="price_histories")
 
-# --- Подписки ---
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True, nullable=False)
@@ -99,3 +98,13 @@ class PurchaseHistory(Base):
 
     user = relationship("User")
     sub = relationship("Subscription")
+
+class SubscriptionDuration(Base):
+    __tablename__ = "subscription_durations"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sub_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False)
+    months = Column(Integer, nullable=False, unique=True)
+    multiplier = Column(DECIMAL(10, 2, asdecimal=True), nullable=False)
+    label = Column(String(64), nullable=False)
+
+    subscription = relationship("Subscription")

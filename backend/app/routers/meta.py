@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.db import get_db
-from app.database.models import PriceHistory, Region, Category, User
+from app.database.models import PriceHistory, Region, Category, User, Subscription, SubscriptionDuration
 
 router = APIRouter()
 
@@ -36,4 +36,18 @@ def get_weather_region(db: Session):
     return {
         "weather_conditions": PriceHistory.__table__.columns["weather_condition"].type.enums,
         "regions": regions
+    }
+
+@router.get("/meta/subs")
+def get_subscriptions(db: Session = Depends(get_db)):
+    return {
+        "subscriptions": db.query(Subscription).all()
+    }
+
+@router.get("/meta/subscription-options")
+def get_subscription_options(db: Session = Depends(get_db)):
+    durations = db.query(SubscriptionDuration).all()
+
+    return {
+        "durations": durations
     }

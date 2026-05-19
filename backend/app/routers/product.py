@@ -8,8 +8,8 @@ from sqlalchemy import text
 from datetime import datetime, timedelta
 import pandas as pd
 from app.ml_models.ml_models import train_predict_model
-from sqlalchemy.exc import IntegrityError, DataError
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DataError
+from app.routers.subscription import get_active_subscription
 
 router = APIRouter()
 
@@ -109,7 +109,7 @@ def create_product(
             db.rollback()
             raise
 
-    except (DataError) as e:
+    except DataError as e:
         db.rollback()
 
         error_text = str(e.orig)
@@ -241,9 +241,9 @@ def get_price_history_for_model(product_id: int,
     range_day = today - timedelta(milliseconds=range)
 
     data_query = text("""
-    SELECT changed_at, price, season, weather_condition, weekend FROM price_histories
-    WHERE product_id = :product_id AND changed_at >= :range_day AND region_id = :region_id
-    ORDER BY changed_at ASC
+        SELECT changed_at, price, season, weather_condition, weekend FROM price_histories
+        WHERE product_id = :product_id AND changed_at >= :range_day AND region_id = :region_id
+        ORDER BY changed_at ASC
     """)
     price_history = db.execute(data_query, {"product_id": product_id, "range_day": range_day, "region_id": region_id}).mappings().all()
     df = pd.DataFrame(price_history)
@@ -253,16 +253,44 @@ def get_price_history_for_model(product_id: int,
 
     return df
 
+from fastapi import HTTPException, Depends
+from sqlalchemy.orm import Session
+
 @router.get("/{product_id}/price-prediction")
-def get_prices(product_id: int,
-               region_id: int = 1,
-               range: int = Query(default=1_000_000_000_000),
-               predict_days: int = Query(default=7),
-               db: Session = Depends(get_db)
-               ):
+def get_prices(
+    product_id: int,
+    region_id: int = 1,
+    range: int = Query(default=1_000_000_000_000),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     try:
+
+        range_days = range // (24 * 60 * 60 * 1000)
+
+        print("DAYS", range_days)
+
+        if range_days > 1:
+
+            active_subscription = get_active_subscription(
+                current_user.id,
+                db
+            )
+
+            if not active_subscription:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Subscription required"
+                )
+            
         df = get_price_history_for_model(product_id, region_id, range, db)
-        result = train_predict_model(df, range_days=predict_days, is_debugging=False)
+
+        result = train_predict_model(
+            df,
+            range_days=range_days,
+            is_debugging=False
+        )
+
         return [
             {
                 "timestamp": date.isoformat(),
@@ -271,6 +299,13 @@ def get_prices(product_id: int,
             for date, price in zip(result["timestamp"], result["predictions"])
         ]
 
+    except HTTPException:
+        raise
+
     except Exception as e:
         print("ERROR ", str(e))
-        raise HTTPException(status_code=400, detail=f"Error when trying to predict prices: {str(e)}")
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error when trying to predict prices: {str(e)}"
+        )

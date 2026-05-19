@@ -17,6 +17,7 @@ from app.routers.metrics import router as metrics_router
 from app.routers.category import router as category_router
 from app.routers.region import router as region_router
 from app.routers.user import router as user_router
+from app.routers.subscription import router as sub_router
 
 random.seed(67)
 app = FastAPI(
@@ -40,6 +41,7 @@ app.include_router(metrics_router, prefix="/api/metrics")
 app.include_router(user_router, prefix="/api/users")
 app.include_router(category_router, prefix="/api/categories")
 app.include_router(region_router, prefix="/api/regions")
+app.include_router(sub_router, prefix="/api/subscriptions")
 
 @app.on_event("startup")
 async def Start():
